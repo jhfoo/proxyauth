@@ -1,0 +1,29 @@
+{
+  "name": "proxyauth",
+  "version": "1.0.0",
+  "description": "Authentication proxy for nginx",
+  "main": "index.js",
+  "scripts": {
+    "dev": "supervisor -n exit src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhfoo/proxyauth.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jhfoo/proxyauth/issues"
+  },
+  "homepage": "https://github.com/jhfoo/proxyauth#readme",
+  "devDependencies": {
+    "fastify": "^3.10.1",
+    "fastify-cookie": "^5.1.0",
+    "fastify-static": "^3.4.0",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0",
+    "supervisor": "^0.12.0"
+  }
+}
