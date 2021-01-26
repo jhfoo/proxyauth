@@ -58,7 +58,12 @@ passport.use(new FacebookStrategy({
   // })
 }))
 
+app.get('/login', (req, res) => {
+  res.cookie('AuthRedirect', req.query.url ? req.query.url : '')
+  res.redirect(302,'/login/index.html')
+})
 app.use('/login/', express.static('public'))
+app.use(require('cookie-parser')())
 app.use(session({ 
   secret: 'smelly-cat',
   resave: false,
@@ -71,12 +76,30 @@ app.use(passport.session())
 app.get('/', (req, res) => {
   console.log('/')
   console.log(req.session)
-  res.cookie('proxyauth', 'abcdef', {
-    domain: 'kungfoo.info',
-    path: '/',
-  })
-  res.send('ok')
+  console.log(req.cookies)
+  if (req.session.passport) {
+    if (req.session.passport.user.profile.id === '10158214699402734') {
+      // authorise GO on proxy
+      res.cookie('proxyauth', 'aaabbb', {
+        domain: 'kungfoo.info',
+        path: '/',
+      })
+  
+      if (req.cookies.AuthRedirect) {
+        res.redirect(302,req.cookies.AuthRedirect)
+      } else {
+        res.send('Authenticated and authorised')
+      }
+      return
+    }
+
+    // else
+    res.send('Authenticated but not authorised to access')
+  } else {
+    res.redirect(302, '/login')
+  }
 })
+
 
 app.get('/login/facebook', passport.authenticate('facebook'))
 app.get('/login/facebook/callback', passport.authenticate('facebook', { 
@@ -85,9 +108,22 @@ app.get('/login/facebook/callback', passport.authenticate('facebook', {
   })
 )
 
+app.get('/logout', (req, res) => {
+  res.cookie('proxyauth', '', {
+    domain: 'kungfoo.info',
+    path: '/',
+  })
+  .redirect(302,'https://auth.kungfoo.info')
+})
+
 app.get('/proxy-auth', (req, res) => {
-  console.log(req.session)
-  res.status(401).end()
+  if (req.cookies.proxyauth && req.cookies.proxyauth === 'aaabbb') {
+    res.send('ok')
+  } else {
+    console.log(req.session)
+    console.log(req.headers)
+    res.status(401).end()
+  }
 })
 
 app.listen(Config.PORT, () => {
