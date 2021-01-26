@@ -19,10 +19,13 @@
   },
   "homepage": "https://github.com/jhfoo/proxyauth#readme",
   "devDependencies": {
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
     "fastify": "^3.10.1",
     "fastify-cookie": "^5.1.0",
     "fastify-static": "^3.4.0",
     "passport": "^0.4.1",
+    "passport-facebook": "^3.0.0",
     "passport-local": "^1.0.0",
     "supervisor": "^0.12.0"
   }

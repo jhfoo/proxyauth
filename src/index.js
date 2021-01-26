@@ -1,41 +1,86 @@
-const path = require('path'),
-  fastify = require('fastify')({ logger: true })
+const express = require('express'),
+  app = express(),
+  session = require('express-session'),
+  passport = require('passport'),
+  LocalStrategy = require('passport-local').Strategy,
+  FacebookStrategy = require('passport-facebook').Strategy
 
-fastify.register(require('fastify-cookie'), {
-  // secret: "my-secret", // for cookies signature
-  parseOptions: {}     // options for parsing cookies
-})
-
-console.log(path.resolve(__dirname, '../public'))
-fastify.register(require('fastify-static'), {
-  root: path.resolve(__dirname, '../public'),
-  prefix: '/login/'
-})
-
-// fastify.get('/login', function (req, reply) {
-//   return reply.sendFile('index.html', path.resolve(__dirname, '../public'))
-// })
-
-fastify.get('/proxy-auth', async (req, res) => {
-  console.log(req.headers)
-  res.code(401)
-  // res.header('x-vouch-token','blahblah')
-  // res.setCookie('MyJwt', 'MyValue', {
-  //   domain: 'kungfoo.info',
-  //   path: '/'
-  // })
-  return {
-    error: '',
-    // param: req.params
-  }
-})
-
-const start = async() => {
-  try {
-    await fastify.listen(9000, '0.0.0.0')
-  } catch (err) {
-    fastify.log.error(err)
-  }
+const Config = {
+  PORT: 9000
 }
 
-start()
+passport.use(new LocalStrategy((UserId, UserPwd, done) => {
+  if (UserId === 'jhfoo' && UserPwd === 'abc') {
+    return done(null, {
+      name: 'Foo JH'
+    })
+  }
+
+  // else
+  return done(null, false, {
+    message: 'Incorrect credentials'
+  })
+}))
+
+passport.serializeUser(function(user, done) {
+  console.log('serializeUser')
+  console.log(user)
+  done(null, user)
+})
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+})
+
+passport.use(new FacebookStrategy({
+  clientID: '398360224794432',
+  clientSecret: '78f145571edd612b122db36392cba8cd',
+  callbackURL: "https://auth.kungfoo.info/login/facebook/callback"
+}, (accessToken, refreshToken, profile, done) => {
+  console.log(`accessToken: ${accessToken}`)
+  console.log(`refreshToken: ${refreshToken}`)
+  console.log(profile)
+
+  done(null, {
+    accessToken: accessToken,
+    refreshToken: refreshToken,
+    profile: profile
+  })
+  // User.findOrCreate(..., function(err, user) {
+  //   if (err) { 
+  //     return done(err)
+  //   }
+  //   done(null, user)
+  // })
+}))
+
+app.use('/login/', express.static('public'))
+app.use(session({ 
+  secret: 'smelly-cat',
+  resave: false,
+  saveUninitialized: true,
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+
+
+app.get('/', (req, res) => {
+  console.log('/')
+  console.log(req.session)
+  res.send('ok')
+})
+
+app.get('/login/facebook', passport.authenticate('facebook'))
+app.get('/login/facebook/callback', passport.authenticate('facebook', { 
+    successRedirect: '/',
+    failureRedirect: '/login' 
+  })
+)
+
+app.get('/proxy-auth', (req, res) => {
+  res.status(401).end()
+})
+
+app.listen(Config.PORT, () => {
+  console.log(`Listening on http://localhost:${Config.PORT}`)
+})
