@@ -1,4 +1,6 @@
-const express = require('express'),
+const fs = require('fs'),
+  path = require('path'),
+  express = require('express'),
   app = express(),
   session = require('express-session'),
   passport = require('passport'),
@@ -8,6 +10,8 @@ const express = require('express'),
 const Config = {
   PORT: 9000
 }
+
+const AppConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../conf/app.json'), 'utf8'))
 
 passport.use(new LocalStrategy((UserId, UserPwd, done) => {
   if (UserId === 'jhfoo' && UserPwd === 'abc') {
@@ -33,9 +37,9 @@ passport.deserializeUser(function(user, done) {
 })
 
 passport.use(new FacebookStrategy({
-  clientID: '398360224794432',
-  clientSecret: '78f145571edd612b122db36392cba8cd',
-  callbackURL: "https://auth.kungfoo.info/login/facebook/callback"
+  clientID: AppConfig.AuthProviders.facebook.clientId,
+  clientSecret: AppConfig.AuthProviders.facebook.clientSecret,
+  callbackURL: AppConfig.AuthProviders.facebook.callbackUrl,
 }, (accessToken, refreshToken, profile, done) => {
   console.log(`accessToken: ${accessToken}`)
   console.log(`refreshToken: ${refreshToken}`)
@@ -67,6 +71,10 @@ app.use(passport.session())
 app.get('/', (req, res) => {
   console.log('/')
   console.log(req.session)
+  res.cookie('proxyauth', 'abcdef', {
+    domain: 'kungfoo.info',
+    path: '/',
+  })
   res.send('ok')
 })
 
@@ -78,6 +86,7 @@ app.get('/login/facebook/callback', passport.authenticate('facebook', {
 )
 
 app.get('/proxy-auth', (req, res) => {
+  console.log(req.session)
   res.status(401).end()
 })
 

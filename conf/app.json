@@ -1,0 +1,9 @@
+{
+  "AuthProviders": {
+    "facebook": {
+      "clientId": "398360224794432",
+      "clientSecret": "78f145571edd612b122db36392cba8cd",
+      "callbackUrl": "https://auth.kungfoo.info/login/facebook/callback"
+    }
+  }
+}
