@@ -3,11 +3,14 @@ const fs = require('fs'),
   express = require('express'),
   app = express(),
   session = require('express-session'),
+  jwt = require('jsonwebtoken'),
+  jwtDecode = require('jwt-decode'),
   PassportHandler = require('./PassportHandler'),
   LoginLogoutHandler = require('./LoginLogoutHandler')
 
 const Config = {
-  PORT: 9000
+  PORT: 9000,
+  JWT_SECRET: 'smelly-cat',
 }
 
 const AppConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../conf/app.json'), 'utf8'))
@@ -19,7 +22,7 @@ app.use(session({
   saveUninitialized: true,
 }))
 
-LoginLogoutHandler.init(app, AppConfig)
+LoginLogoutHandler.init(app)
 PassportHandler.init(app, AppConfig)
 
 
@@ -39,11 +42,16 @@ app.get('/', (req, res) => {
   console.log(req.session)
   console.log(req.cookies)
   if (req.session.passport) {
-    if (isAuthUser(req.session.passport.user.profile)) {
+    if (isAuthUser(req.session.passport.user)) {
       // authorise GO on proxy
-      res.cookie('proxyauth', 'aaabbb', {
+      const token = jwt.sign(req.session.passport.user, Config.JWT_SECRET, {
+        expiresIn: '8h',
+      })
+      res.cookie('proxyauth', token, {
         domain: AppConfig.domain.parent,
         path: '/',
+        secure: true,
+        httpOnly: true,
       })
   
       if (req.cookies.AuthRedirect) {
@@ -61,11 +69,36 @@ app.get('/', (req, res) => {
   }
 })
 
-
+app.get('/whoami', (req, res) => {
+  console.log('/whoami')
+  if (req.cookies.proxyauth) {
+    try {
+      const user = jwtDecode(req.cookies.proxyauth)
+      res.send(user)
+    } catch (err) {
+      // invalid token
+      console.log(err)
+      res.send(err)
+    }
+  } else {
+    res.send({})
+  }
+})
 
 app.get('/proxy-auth', (req, res) => {
-  if (req.cookies.proxyauth && req.cookies.proxyauth === 'aaabbb') {
-    res.send('ok')
+  console.log('/proxy-auth')
+  if (req.cookies.proxyauth) {
+    try {
+      console.log(`Verifying ${req.cookies.proxyauth}`)
+      jwt.verify(req.cookies.proxyauth, Config.JWT_SECRET)
+      const user = jwtDecode(req.cookies.proxyauth)
+      console.log(user)
+      res.send('ok')
+    } catch (err) {
+      // invalid token
+      console.log(err)
+      LoginLogoutHandler.clearSessionCookie(req, res).status(401).end()
+    }
   } else {
     console.log(req.session)
     console.log(req.headers)

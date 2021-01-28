@@ -31,15 +31,16 @@ function initStrategies(AppConfig) {
     clientID: AppConfig.AuthProviders.facebook.clientId,
     clientSecret: AppConfig.AuthProviders.facebook.clientSecret,
     callbackURL: AppConfig.AuthProviders.facebook.callbackUrl,
+    // profileFields:['id','profileUrl','displayName','email'],
   }, (accessToken, refreshToken, profile, done) => {
     console.log(`accessToken: ${accessToken}`)
     console.log(`refreshToken: ${refreshToken}`)
     console.log(profile)
   
     done(null, {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      profile: profile
+      id: profile.id,
+      name: profile.displayName,
+      provider: profile.provider,
     })
     // User.findOrCreate(..., function(err, user) {
     //   if (err) { 
@@ -59,9 +60,12 @@ function initStrategies(AppConfig) {
     console.log(profile)
   
     return cb(null, {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      profile: profile
+      id: profile.username,
+      name: profile.displayName,
+      provider: profile.provider,
+      // accessToken: accessToken,
+      // refreshToken: refreshToken,
+      // profile: profile
     })
   }))
 }

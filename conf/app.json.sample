@@ -1,0 +1,17 @@
+{
+  "AuthProviders": {
+    "facebook": {
+      "clientId": "CLENT_ID",
+      "clientSecret": "CLIENT_SECRET",
+      "callbackUrl": "https://host.your.domain/login/facebook/callback"
+    },
+    "github": {
+      "clientId": "CLENT_ID",
+      "clientSecret": "CLIENT_SECRET"
+    }
+  },
+  "domain": {
+    "parent": "your.domain",
+    "auth": "host.your.domain"
+  }
+}
