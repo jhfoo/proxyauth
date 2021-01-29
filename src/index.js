@@ -26,7 +26,7 @@ PassportHandler.init(app, AppConfig)
 function isAuthUser(profile) {
   switch (profile.provider) {
     case 'github':
-      return profile.id === '5701889'
+      return profile.id === 'jhfoo'
     case 'facebook':
       return profile.id === '10158214699402734'
   }
