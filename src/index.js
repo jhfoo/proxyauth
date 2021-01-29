@@ -66,6 +66,23 @@ app.get('/', (req, res) => {
   }
 })
 
+app.get('/about', (req, res) => {
+  console.log('/about')
+  const out = {
+    NODE_ENV: process.env.NODE_ENV,
+    JwtCookie: Config.COOKIE_NAME,
+    domain: AppConfig.domain,
+  }
+
+  if (req.query.format === 'json') {
+    res
+    .header('content-type','text/plain')
+    res.send(JSON.stringify(out, null, 2))
+  } else {
+    res.send(out)    
+  }
+})
+
 app.get('/whoami', (req, res) => {
   console.log('/whoami')
   if (req.cookies[Config.COOKIE_NAME]) {
