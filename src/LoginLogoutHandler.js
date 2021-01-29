@@ -1,17 +1,24 @@
 const fs = require('fs'),
   path = require('path'),
-  express = require('express')
+  express = require('express'),
+  Config = require('./Config')
 
 const AppConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../conf/app.json'), 'utf8'))
 
 function _clearSessionCookie(req, res) {
   req.session.destroy()
-  return res.cookie('proxyauth', '', {
+  return res.cookie([Config.COOKIE_NAME], '', {
     domain: AppConfig.domain.parent,
     path: '/',
     secure: true,
     httpOnly: true,
   })
+  // .cookie('proxyauth', '', {
+  //   domain: AppConfig.domain.parent,
+  //   path: '/',
+  //   secure: true,
+  //   httpOnly: true,
+  // })
 }
 
 module.exports = {

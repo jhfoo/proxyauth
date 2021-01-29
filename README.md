@@ -4,6 +4,9 @@ Authentication proxy for nginx
 ## Goal
 Experimental proxy implementing [Zero Trust](https://www.crowdstrike.com/epp-101/zero-trust-security/) with Nginx as the proxy engine.
 
+## Demo
+[https://mockapp.kungfoo.info](https://mockapp.kungfoo.info)
+
 ## Introduction
 Want to enable access to restricted sites without using VPN? Imagine this: user types in the url of the restricted app (eg. intranet.domain.com) on his home desktop browser. The first time he gets redirected to a login page (login.domain.com). On success he gets redirected back to the restricted app url which now shows the app page. He switches to other restricted apps and doesn't need to be authenticated. 
 

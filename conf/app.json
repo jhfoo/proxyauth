@@ -1,0 +1,19 @@
+{
+  "AuthProviders": {
+    "facebook": {
+      "clientId": "398360224794432",
+      "clientSecret": "78f145571edd612b122db36392cba8cd",
+      "callbackUrl": "/login/facebook/callback"
+    },
+    "github": {
+      "clientId": "102efd2ff7bba25273b4",
+      "clientSecret": "64ab9e259a59f7f9a865dd876c432e3ff22cca01"
+    }
+  },
+  "domain": {
+    "parent": "kungfoo.info",
+    "auth": "auth-dev.kungfoo.info"
+  },
+  "PORT": 9000,
+  "JWT_SECRET": "smelly-cat"
+}

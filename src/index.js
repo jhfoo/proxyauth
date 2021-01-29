@@ -5,14 +5,11 @@ const fs = require('fs'),
   session = require('express-session'),
   jwt = require('jsonwebtoken'),
   jwtDecode = require('jwt-decode'),
+  Config = require('./Config'),
   PassportHandler = require('./PassportHandler'),
   LoginLogoutHandler = require('./LoginLogoutHandler')
 
-const Config = {
-  PORT: 9000,
-  JWT_SECRET: 'smelly-cat',
-}
-
+// dynamic params
 const AppConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../conf/app.json'), 'utf8'))
 
 app.use(require('cookie-parser')())
@@ -44,10 +41,10 @@ app.get('/', (req, res) => {
   if (req.session.passport) {
     if (isAuthUser(req.session.passport.user)) {
       // authorise GO on proxy
-      const token = jwt.sign(req.session.passport.user, Config.JWT_SECRET, {
+      const token = jwt.sign(req.session.passport.user, AppConfig.JWT_SECRET, {
         expiresIn: '8h',
       })
-      res.cookie('proxyauth', token, {
+      res.cookie(Config.COOKIE_NAME, token, {
         domain: AppConfig.domain.parent,
         path: '/',
         secure: true,
@@ -71,9 +68,10 @@ app.get('/', (req, res) => {
 
 app.get('/whoami', (req, res) => {
   console.log('/whoami')
-  if (req.cookies.proxyauth) {
+  if (req.cookies[Config.COOKIE_NAME]) {
     try {
-      const user = jwtDecode(req.cookies.proxyauth)
+      jwt.verify(req.cookies[Config.COOKIE_NAME], AppConfig.JWT_SECRET)
+      const user = jwtDecode(req.cookies[Config.COOKIE_NAME])
       res.send(user)
     } catch (err) {
       // invalid token
@@ -87,12 +85,11 @@ app.get('/whoami', (req, res) => {
 
 app.get('/proxy-auth', (req, res) => {
   console.log('/proxy-auth')
-  if (req.cookies.proxyauth) {
+  if (req.cookies[Config.COOKIE_NAME]) {
     try {
-      console.log(`Verifying ${req.cookies.proxyauth}`)
-      jwt.verify(req.cookies.proxyauth, Config.JWT_SECRET)
-      const user = jwtDecode(req.cookies.proxyauth)
-      console.log(user)
+      jwt.verify(req.cookies[Config.COOKIE_NAME], AppConfig.JWT_SECRET)
+      const user = jwtDecode(req.cookies[Config.COOKIE_NAME])
+      // TODO: authorise target domain access
       res.send('ok')
     } catch (err) {
       // invalid token
@@ -106,6 +103,6 @@ app.get('/proxy-auth', (req, res) => {
   }
 })
 
-app.listen(Config.PORT, () => {
-  console.log(`Listening on http://localhost:${Config.PORT}`)
+app.listen(AppConfig.PORT, () => {
+  console.log(`Listening on http://localhost:${AppConfig.PORT}`)
 })

@@ -13,5 +13,7 @@
   "domain": {
     "parent": "your.domain",
     "auth": "host.your.domain"
-  }
+  },
+  "PORT": 9000,
+  "JWT_SECRET": "token1se-me"
 }

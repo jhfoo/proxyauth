@@ -30,7 +30,7 @@ function initStrategies(AppConfig) {
   passport.use(new FacebookStrategy({
     clientID: AppConfig.AuthProviders.facebook.clientId,
     clientSecret: AppConfig.AuthProviders.facebook.clientSecret,
-    callbackURL: AppConfig.AuthProviders.facebook.callbackUrl,
+    callbackURL: 'https://' + AppConfig.domain.auth + AppConfig.AuthProviders.facebook.callbackUrl,
     // profileFields:['id','profileUrl','displayName','email'],
   }, (accessToken, refreshToken, profile, done) => {
     console.log(`accessToken: ${accessToken}`)
@@ -53,7 +53,7 @@ function initStrategies(AppConfig) {
   passport.use(new GitHubStrategy({
     clientID: AppConfig.AuthProviders.github.clientId,
     clientSecret: AppConfig.AuthProviders.github.clientSecret,
-    callbackURL: AppConfig.AuthProviders.github.callbackUrl,
+    callbackURL: 'https://' + AppConfig.domain.auth + AppConfig.AuthProviders.github.callbackUrl,
   }, (accessToken, refreshToken, profile, cb) => {
     console.log(`accessToken: ${accessToken}`)
     console.log(`refreshToken: ${refreshToken}`)
