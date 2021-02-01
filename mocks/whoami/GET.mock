@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Access-Control-Allow-Origin: *
+
+{
+   "profile": {"id":"10158214699402734","name":"Ji-Haw Foo","provider":"facebook","iat":1612070840,"exp":1612099640}, 
+   "history": [
+      { "domain": "intranet.kungfoo.info" },
+      { "domain": "consul.kungfoo.info" }
+   ]
+}

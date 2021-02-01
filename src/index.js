@@ -1,10 +1,13 @@
 const fs = require('fs'),
   path = require('path'),
+  http = require('http'),
   express = require('express'),
   app = express(),
+  cors = require('cors'),
   session = require('express-session'),
   jwt = require('jsonwebtoken'),
   jwtDecode = require('jwt-decode'),
+  mockserver = require('mockserver'),
   Config = require('./Config'),
   PassportHandler = require('./PassportHandler'),
   LoginLogoutHandler = require('./LoginLogoutHandler')
@@ -17,6 +20,9 @@ app.use(session({
   secret: 'smelly-cat',
   resave: false,
   saveUninitialized: true,
+}))
+app.use(cors({
+  origin: ['https://auth-devweb.kungfoo.info', 'http://dev2.node.consul:8081'],
 }))
 
 LoginLogoutHandler.init(app)
@@ -89,7 +95,10 @@ app.get('/whoami', (req, res) => {
     try {
       jwt.verify(req.cookies[Config.COOKIE_NAME], AppConfig.JWT_SECRET)
       const user = jwtDecode(req.cookies[Config.COOKIE_NAME])
-      res.send(user)
+      res.send({
+        profile: user,
+        history: [],
+      })
     } catch (err) {
       // invalid token
       console.log(err)
@@ -123,3 +132,5 @@ app.get('/proxy-auth', (req, res) => {
 app.listen(AppConfig.PORT, () => {
   console.log(`Listening on http://localhost:${AppConfig.PORT}`)
 })
+
+http.createServer(mockserver('mocks')).listen(8002)

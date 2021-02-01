@@ -8,7 +8,9 @@ Experimental proxy implementing [Zero Trust](https://www.crowdstrike.com/epp-101
 [https://mockapp.kungfoo.info](https://mockapp.kungfoo.info)
 
 ## Introduction
-Want to enable access to restricted sites without using VPN? Imagine this: user types in the url of the restricted app (eg. intranet.domain.com) on his home desktop browser. The first time he gets redirected to a login page (login.domain.com). On success he gets redirected back to the restricted app url which now shows the app page. He switches to other restricted apps and doesn't need to be authenticated. 
+Want to enable access to restricted sites without using VPN? 
+
+Imagine this: user types in the url of the restricted app (eg. intranet.domain.com) on his home desktop browser. The first time he gets redirected to a login page (login.domain.com). On success he gets redirected back to the restricted app url which now shows the app page. When he switches to other restricted apps on the same parent domain he is already recognised. 
 
 ## What it does
 ProxyAuth leverages Nginx's auth_request feature which makes Nginx 1) act as a reverse proxy, 2) route inbound connections to ProxyAuth for approval. ProxyAuth approves when user is authenticated and authorised.
