@@ -1,11 +1,11 @@
 {
   "name": "proxyauth",
   "version": "1.0.0",
-  "description": "Authentication proxy for nginx",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "supervisor -n exit src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "supervisor -n exit ./src/server.js"
   },
   "repository": {
     "type": "git",
@@ -19,21 +19,9 @@
   },
   "homepage": "https://github.com/jhfoo/proxyauth#readme",
   "devDependencies": {
-    "cookie-parser": "^1.4.5",
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "express-session": "^1.17.1",
-    "fastify": "^3.10.1",
-    "fastify-cookie": "^5.1.0",
-    "fastify-static": "^3.4.0",
-    "jsonwebtoken": "^8.5.1",
-    "jwt-decode": "^3.1.2",
-    "mockserver": "^3.1.1",
-    "passport": "^0.4.1",
-    "passport-facebook": "^3.0.0",
-    "passport-github": "^1.1.0",
-    "passport-google-oauth": "^2.0.0",
-    "passport-local": "^1.0.0",
+    "cookies": "^0.8.0",
+    "moleculer": "^0.14.28",
+    "moleculer-web": "^0.10.5",
     "supervisor": "^0.12.0"
   }
 }

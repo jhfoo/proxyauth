@@ -1,8 +1,8 @@
 # proxyauth (alpha)
-Authentication proxy for nginx/caddy
+Authentication proxy for nginx 
 
 ## Goal
-Experimental proxy implementing [Zero Trust](https://www.crowdstrike.com/epp-101/zero-trust-security/) with ~~Nginx~~ Caddy as the proxy engine.
+Experimental proxy implementing [Zero Trust](https://www.crowdstrike.com/epp-101/zero-trust-security/) with Nginx as the proxy engine.
 
 ## Demo
 [https://mockapp.kungfoo.info](https://mockapp.kungfoo.info)
