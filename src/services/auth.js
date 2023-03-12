@@ -13,5 +13,8 @@ module.exports = {
       // console.log(`req: ${JSON.stringify(req.$params, null, 2)}`)
       return 'ok bud';
     },
+    whoami(ctx) {
+      return 'whoami'
+    }
   }
 }

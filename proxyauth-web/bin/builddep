@@ -1,0 +1,8 @@
+./node_modules/.bin/quasar build
+
+echo - Re-creating /public
+rm -rf ../public
+mkdir ../public
+
+echo - Copying dist/spa/ to /public
+cp -R ./dist/spa/* ../public
