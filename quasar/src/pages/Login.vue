@@ -6,11 +6,12 @@
       <q-card class="">
         <img src="https://cdn.quasar.dev/img/mountains.jpg">
 
-        <q-form action="/api/auth" method="post">
+        <q-form action="/api/auth" method="post" enctype="multipart/form-data">
           <q-card-section>
             <div class="text-h6">Log In</div>
             <!-- <div class="text-subtitle2">by John Doe</div> -->
-              <q-input v-model="LoginEmail" label="Email" />
+            <q-input name="DisplayName" v-model="LoginDisplayName" label="Display Name" />
+            <q-input name="email" v-model="LoginEmail" label="Email" />
           </q-card-section>
 
           <q-card-actions align="right">
@@ -38,6 +39,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const LoginEmail = ref('')
+const LoginDisplayName = ref('')
 
 const resp = await axios.get('/api/whoami')
 console.log(resp.data)

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 # custom
-import src.api.verify as verify
+import src.route.auth as RouteAuth
 
 
 app = FastAPI()
@@ -35,5 +35,5 @@ app = FastAPI()
 #   print (req.headers)
 #   return {"request_method": req.method, "path_name": path_name}
 
-app.include_router(verify.router)
+app.include_router(RouteAuth.router)
 app.mount('/', StaticFiles(directory='public', html=True), name='static')
