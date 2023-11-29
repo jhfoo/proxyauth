@@ -11,34 +11,45 @@ from fastapi.responses import (
 # custom
 import src.lib.auth as libauth
 import src.lib.SessionMgr as SessionMgr
+import src.lib.AuthorizationMgr as AuthorizationMgr
 
 ADDR_HOME = 'chie.kungfoo.info'
 COOKIE_SESSION_ID = 'sid'
 COOKIE_DOMAIN = 'kungfoo.info'
 KEY_DATETIME_EXPIRED = 'DateTimeExpired'
 
-SessionMgr.init()
-
-router = APIRouter()
-
-scammers = {}
 HomeAddr = {
+  'fqdn': ADDR_HOME,
   'ip': '',
   'DateTimeLastLookup': 0,
 }
+
+SessionMgr.init()
+AuthorizationMgr.init()
+
+router = APIRouter()
+
 HomeDomains = ['evan-dev.kungfoo.info']
 
 @router.get("/api/verify")
 def verifyRequest(req: Request, q: Union[str, None] = None):
+  global HomeAddr
+
   # check if accessing home domains
+  print (f"{req.headers.get('x-forwarded-for')} query: {req.headers.get('host')}")
   if req.headers.get('host') in HomeDomains:
-    return libauth.verifyLocalDomains(req)
-  
-  RemoteIp = req.headers.get("x-forwarded-for")
-  print (f'From {RemoteIp}')
-  print (f'To {req.headers.get("x-forwarded-uri")}')
-  print (req.headers)
-  return {"q": q}
+    # update home addr if expired
+    HomeAddr = libauth.refreshHomeAddr(HomeAddr)
+    if libauth.verifyLocalDomains(HomeAddr, req):
+      return True
+    else:
+      return RedirectResponse(url='https://auth-dev.kungfoo.info/login')
+
+  # RemoteIp = req.headers.get("x-forwarded-for")
+  # print (f'From {RemoteIp}')
+  # print (f'To {req.headers.get("x-forwarded-uri")}')
+  # print (req.headers)
+  # return {"q": q}
 
 @router.get('/api/whoami')
 def authWhoAmI(req: Request, res: Response):

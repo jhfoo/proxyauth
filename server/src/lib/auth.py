@@ -6,8 +6,17 @@ import random
 import datetime
 import socket
 
+# custom
+import src.lib.SessionMgr as SessionMgr
+import src.lib.ProbeTracker as ProbeTracker
+import src.lib.AuthorizationMgr as AuthorizationMgr
+
 KEY_DATETIME_EXPIRED = 'DateTimeExpired'
+KEY_DATETIME_LAST_LOOKUP = 'DateTimeLastLookup'
+KEY_IP = 'ip'
+KEY_FQDN = 'fqdn'
 STORE_COOKIES = 'data/cookies.json'
+
 
 def getAuthorizedCookies():
   infile = open(STORE_COOKIES,'r')
@@ -35,32 +44,33 @@ def getNewSession(sessions):
 
   return SessionId
 
-def verifyLocalDomains(req):
-  # check if accessing from home addr
-  # update home addr if expired
-  if HomeAddr['DateTimeLastLookup'] < datetime.datetime.timestamp(datetime.datetime.now()) - 10000:
-    HomeAddr['ip'] = socket.gethostbyname(ADDR_HOME)
-    print (f"Home address ({ADDR_HOME}): {HomeAddr['ip']}")
-    HomeAddr['DateTimeLastLookup'] = datetime.datetime.timestamp(datetime.datetime.now())
+def refreshHomeAddr(HomeAddr):
+  if not KEY_DATETIME_LAST_LOOKUP in HomeAddr or HomeAddr[KEY_DATETIME_LAST_LOOKUP] < datetime.datetime.timestamp(datetime.datetime.now()) - 10000:
+    HomeAddr[KEY_IP] = socket.gethostbyname(HomeAddr[KEY_FQDN])
+    print (f"Home address ({ HomeAddr[KEY_FQDN] }): {HomeAddr[KEY_IP]}")
+    HomeAddr[KEY_DATETIME_LAST_LOOKUP] = datetime.datetime.timestamp(datetime.datetime.now())
 
-  # if req.headers.get("x-forwarded-for") == HomeAddr['ip']:
-  #   return 'ok'
+  return HomeAddr
+
+def verifyLocalDomains(HomeAddr, req):
+  RemoteIp = req.headers.get("x-forwarded-for")
+
+  # check if accessing from home addr
+  if req.headers.get('x-forwarded-for') == HomeAddr[KEY_IP]:
+    return True
 
   # else check if cookie is valid
   print (f"Cookie: {req.cookies.get('sid')}")
+  profile = SessionMgr.getProfileBySessionId(req.cookies.get('sid'))
+  if profile and AuthorizationMgr.isAuthorized(profile['email'], req.headers.get('host')):
+    return True
 
   # record request
-  RemoteIp = req.headers.get("x-forwarded-for")
-  if not RemoteIp in scammers:
-    scammers[RemoteIp] = {
-      'count': 0,
-      'LastHit': ''
-    }
+  TrackCount = ProbeTracker.track({
+    'ip': RemoteIp
+  })
 
-  scammers[RemoteIp]['count'] += 1
-  scammers[RemoteIp]['LastTime'] = datetime.datetime.timestamp(datetime.datetime.now())
-  print (f'WARNING: Accessing a home domain: {RemoteIp} ({scammers[RemoteIp]["count"]} hits)')
+  print (f'WARNING: Accessing a home domain: {RemoteIp} ({TrackCount} hits)')
+  return False
 
-  resp = RedirectResponse(url='https://auth-dev.kungfoo.info/login')
-  return resp
 

@@ -38,6 +38,9 @@ def persist():
   CookieFile.close()
 
 def isValidSessionId(SessionId):
+  if SessionId == None:
+    return False
+  
   if SessionId in _sessions:
     # session registered
     if _sessions[SessionId][KEY_DATETIME_EXPIRED] >= datetime.datetime.timestamp(datetime.datetime.now()):
@@ -58,7 +61,7 @@ def getProfileBySessionId(SessionId):
     return _sessions[SessionId]
 
   # else
-  return {}
+  return None
   
 
 def getNewSession():
@@ -81,6 +84,13 @@ def deregisterSession(SessionId):
 
 def registerSession(DisplayName, email):
   SessionId = getNewSession()
+
+  # remove existing session with duplicate email
+  for SessionId in list(_sessions.keys()).copy():
+    if KEY_EMAIL in _sessions[SessionId] and _sessions[SessionId][KEY_EMAIL] == email:
+      # found duplicate: remove
+      del _sessions[SessionId]
+      print (f"Removed duplicate registered email: {email}")
 
   _sessions[SessionId] = {
     KEY_DISPLAY_NAME: DisplayName,

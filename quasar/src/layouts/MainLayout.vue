@@ -15,7 +15,12 @@
           Quasar App
         </q-toolbar-title>
 
-        <q-btn @click="onLogout()" flat dense round icon="logout" aria-label="Logout"/>
+        <q-btn @click="onLogout()" flat dense aria-label="Logout">
+          <q-icon name="logout"/>
+          <q-tooltip>
+            Log Out
+          </q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
