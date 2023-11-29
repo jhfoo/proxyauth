@@ -2,6 +2,7 @@ const
   ApiGateway = require("moleculer-web"),
   passport = require('passport'),
   GithubStrategy = require('passport-github2').Strategy,
+  jwt = require('jsonwebtoken'),
   secrets = require('./lib/SecretMgr').getSingleton()
 
 init()
@@ -51,23 +52,31 @@ module.exports = {
     routes: [{
       path: '/api',
       authentication: true,
+      authorization: true,
       aliases: {
-        'GET verify/:redirect': [
-          function (req, res, next) {
-            this.verifyToken(req, res, next)
-            // res.end('ok dude')
-            // auth.verify(),
-          },
-          'auth.verify',
-        ],
-        'GET login': 'auth.login',
+        'GET verify/:redirect': 'auth.verify',
         'health': '$node.health',
         'GET services': '$node.services',
+        'GET login': 'auth.login',
       }
     }, {
       path: '/auth',
+      cors: {
+        origin: '*',
+      },
       // authentication: true,
       aliases: {
+        'GET logout': [
+          function (req, res, next) {
+            req.logout((err) => {
+              if (err) {
+                console.error(`ERROR: ${err}`)
+              } 
+              res.clearCookie('AuthToken')
+              res.redirect('/#/login')
+            })
+          },
+        ],
         'GET github': [
           function (req, res, next) {
             passport.authenticate('github', {
@@ -85,13 +94,30 @@ module.exports = {
           function (req, res, next) {
             console.log('DEBUG: github/callback')
             passport.authenticate('github', {
-              failureRedirect: '/login'
+              failureRedirect: '/#/login'
             })(req, res, next)
           },
-          function (req, res, next) {
+          async function (req, res, next) {
             console.log('github auth passed')
             console.log(`user: ${JSON.stringify(req.user, null, 2)}`)
-            res.redirect('/welcome')
+
+            // prepare jwt
+            TOKEN_EXPIRY_SEC = 60 * 60
+            let payload = {
+              provider: req.user.provider,
+              UserId: req.user.username,
+              UserName: req.user.displayName,
+              exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRY_SEC,
+            }
+
+            // set jwt in cookie
+            let token = jwt.sign(payload, await secrets.getSecretByKey('jwt/dev/default'))
+            console.log(`jwt: ${token}`)
+            res.cookie('AuthToken', token, {
+              httpOnly: true,
+              domain: 'kungfoo.info',
+            })
+            res.redirect('/#/dashboard')
           }
         ],
         'GET whoami': [
@@ -101,9 +127,14 @@ module.exports = {
           //     failureRedirect: '/login'
           //   })(req, res, next)
           // },
-          function (req, res, next) {
-            console.log(`whoami: ${JSON.stringify(req.user, null, 2)}`)
-            res.end('whoami debug')
+          async function (req, res, next) {
+            let DecodedToken = await this.getIdentityFromRequest(req)
+            console.log(`whoami: ${JSON.stringify(DecodedToken, null, 2)}`)
+            if (DecodedToken) {
+              res.end(JSON.stringify(DecodedToken, null, 2))
+            } else {
+              res.end('{}')
+            }
           }
         ]
         // 'auth.whoami',
@@ -118,10 +149,44 @@ module.exports = {
 
 
   methods: {
-    authenticate(ctx, route, req, res) {
+    async getIdentityFromRequest(req) {
       console.log('authorize()')
-      ctx.meta.$statusCode = 302
-      ctx.meta.$location = 'https://auth-dev.kungfoo.info/login'
+
+      token = req.cookies.AuthToken
+      if (token) {
+        console.log(`DEBUG jwt found in cookie: ${token}`)
+
+        // decode and verify token
+        try {
+          return jwt.verify(token, await secrets.getSecretByKey('jwt/dev/default'))
+        } catch (err) {
+          if (err instanceof jwt.TokenExpiredError) {
+            console.log(`ERROR: TokenExpiredError`)
+          } else {
+            console.error('unknown error')
+          }
+          return null
+        }
+      }
+
+    },
+    async authorize(ctx, route, req, res) {
+      console.log(`DEBUG authorize: ${JSON.stringify(ctx.meta, null, 2)}`)
+      return Promise.resolve(ctx)
+    },
+    async authenticate(ctx, route, req, res) {
+      let DecodedToken = await this.getIdentityFromRequest(req)
+      if (DecodedToken) {
+        // auth passed
+        return Promise.resolve(DecodedToken)
+      }
+      // auth failed
+      console.log(`DEBUG: auth failed`)
+      return Promise.reject()
+
+      // auth fail
+      // ctx.meta.$statusCode = 302
+      // ctx.meta.$location = 'https://auth-dev.kungfoo.info/login'
       // return Promise.resolve(ctx)
     },
     verifyToken(req, res, next) {

@@ -1,6 +1,7 @@
 const { ServiceBroker } = require("moleculer"),
   express = require('express'), 
   session = require('express-session'),
+  cookieParser = require('cookie-parser'),
   passport = require('passport'),
   secrets = require('./lib/SecretMgr').initSingleton('http://192.168.99.30:8500')
 
@@ -10,7 +11,7 @@ console.log(`DEBUG singleton after init: ${secrets.ServiceBaseUrl}`)
 // Create a ServiceBroker
 const broker = new ServiceBroker({
   logger: console,
-  hotReload: true
+  // hotReload: true
 })
 
 // Define a service
@@ -27,6 +28,7 @@ app.use(session({
   secret: 'itchycat',
 }))
 app.use(passport.session())
+app.use(cookieParser())
 app.use('/', web.express())
 app.listen (8000, (err) => {
   if (err) {

@@ -1,0 +1,5 @@
+:5005 {
+  root * ./dist/spa
+  file_server
+  try_files {path} /index.html
+}
