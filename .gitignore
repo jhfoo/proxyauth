@@ -1,5 +1,6 @@
 conf/app.json
 server/src/__pycache__/
+server/venv/
 
 # Logs
 logs
