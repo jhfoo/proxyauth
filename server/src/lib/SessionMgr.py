@@ -38,6 +38,8 @@ def persist():
   CookieFile.close()
 
 def isValidSessionId(SessionId):
+  global _sessions
+
   if SessionId == None:
     return False
   
@@ -57,7 +59,12 @@ def isValidSessionId(SessionId):
   return False
 
 def getProfileBySessionId(SessionId):
+  global _sessions
+
+  print (f"Retrieving profile by sessionId: {SessionId}")
+
   if isValidSessionId(SessionId):
+    print (f"Session found: ${SessionId}")
     return _sessions[SessionId]
 
   # else

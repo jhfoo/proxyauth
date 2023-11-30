@@ -1,11 +1,9 @@
 <template>
-  <q-page class="flex flex-center">
-    Hello {{ user.DisplayName }}
-    <img
-      alt="Quasar logo"
-      src="~assets/quasar-logo-vertical.svg"
-      style="width: 200px; height: 200px"
-    >
+  <q-page class="">
+    <div>Hello {{ user.DisplayName }} ({{ user.email }})</div>
+    <div>Authorized Hosts</div>
+    <div v-for="host in AuthorizedHosts">- <a :href="'https://' + host">{{ host }}</a></div>
+    
   </q-page>
 </template>
 
@@ -16,13 +14,24 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const user = ref({})
+const AuthorizedHosts = ref([])
 
-const resp = await axios.get('/api/whoami')
-console.log(resp.data)
-if (!resp.data.sid) {
+user.value = await getUserProfile()
+if (!user.value) {
   router.push('/login')
-} else {
-  user.value = resp.data
 }
 
+AuthorizedHosts.value = await getAuthorizedHosts()
+
+async function getAuthorizedHosts() {
+  const resp = await axios.get('/api/authorized')
+  console.log(resp.data)
+  return resp.data
+}
+
+async function getUserProfile() {
+  const resp = await axios.get('/api/whoami')
+  console.log(resp.data)
+  return resp.data.sid ? resp.data : null
+} 
 </script>

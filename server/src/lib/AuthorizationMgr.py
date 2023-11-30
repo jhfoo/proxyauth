@@ -18,3 +18,12 @@ def isAuthorized(email, fqdn):
   
   print (f"WARNING: Unauthorized access by {email} to {fqdn}")
   return False
+
+def getDomains(email):
+  global AuthorizationRegistry
+
+  if email in AuthorizationRegistry:
+    return list(AuthorizationRegistry[email].keys())
+  
+  # else
+  return []
