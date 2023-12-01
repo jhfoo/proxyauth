@@ -1,6 +1,7 @@
 # core
 import datetime
 import json
+import os
 
 # community
 from typing import Union, Annotated
@@ -35,6 +36,10 @@ HomeAddr = {
   'DateTimeLastLookup': 0,
 }
 
+# create data folder
+if not os.path.exists('./data'):
+  os.mkdir('./data')
+  
 SessionMgr.init()
 AuthorizationMgr.init()
 ProfileMgr.init()
