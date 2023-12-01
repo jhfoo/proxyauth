@@ -2,6 +2,7 @@
 import json
 import random
 import datetime
+import os
 from typing import Union
 
 # community
@@ -23,6 +24,9 @@ class Session(BaseModel):
 
 
 def init():
+  if not os.path.exists(STORE_COOKIES):
+    persist()
+
   infile = open(STORE_COOKIES,'r')
   global _sessions
   _sessions = json.loads(infile.read())

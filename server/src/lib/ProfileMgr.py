@@ -24,7 +24,7 @@ def init():
   # auto create profile database
   if not os.path.exists(FILE_PROFILES):
     file = open(FILE_PROFILES,'w')
-    file.write(json.dumps({}, indent=2))
+    file.write(json.dumps(_profiles, indent=2))
     file.close()
 
   # load profiles into cache

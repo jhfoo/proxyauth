@@ -1,5 +1,6 @@
 # core
 import json
+import os
 
 FILE_AUTHZ = 'data/authorization.json'
 
@@ -8,9 +9,17 @@ AuthorizationRegistry = {}
 def init():
   global AuthorizationRegistry
 
+  if not os.path.exists(FILE_AUTHZ):
+    persist()
+    
   infile = open(FILE_AUTHZ,'r')
   AuthorizationRegistry = json.loads(infile.read())
   infile.close()
+
+def persist():
+  outfile = open(FILE_AUTHZ,'w')
+  outfile.write(json.dumps(AuthorizationRegistry, indent=2))
+  outfile.close()
 
 def isAuthorized(ProfileId, fqdn):
   # normalize to ProfileId
