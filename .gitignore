@@ -4,6 +4,7 @@ server/venv/
 */__pycache__/
 server/data/cookies.json
 server/data/authorization.json
+server/data/profiles.json
 
 # Logs
 logs

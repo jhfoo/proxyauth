@@ -2,15 +2,25 @@
 import json
 import random
 import datetime
+from typing import Union
 
-
+# community
+from pydantic import BaseModel
 
 STORE_COOKIES = 'data/cookies.json'
 KEY_DATETIME_EXPIRED = 'DateTimeExpired'
 KEY_DISPLAY_NAME = 'DisplayName'
 KEY_EMAIL = 'email'
+KEY_SESSION_ID = 'sid'
+KEY_PROFILE_ID = 'ProfileId'
 
 _sessions = {}
+
+class Session(BaseModel):
+  id: str
+  ProfileId: str
+  DateTimeExpired: Union[int, None] = None
+
 
 def init():
   infile = open(STORE_COOKIES,'r')
@@ -58,14 +68,14 @@ def isValidSessionId(SessionId):
 
   return False
 
-def getProfileBySessionId(SessionId):
+def getSession(SessionId):
   global _sessions
 
   print (f"Retrieving profile by sessionId: {SessionId}")
 
   if isValidSessionId(SessionId):
     print (f"Session found: ${SessionId}")
-    return _sessions[SessionId]
+    return Session(**_sessions[SessionId]) 
 
   # else
   return None
@@ -89,21 +99,21 @@ def deregisterSession(SessionId):
   del _sessions[SessionId]
   persist()
 
-def registerSession(DisplayName, email):
-  SessionId = getNewSession()
-
+def registerSession(ProfileId):
   # remove existing session with duplicate email
   for SessionId in list(_sessions.keys()).copy():
-    if KEY_EMAIL in _sessions[SessionId] and _sessions[SessionId][KEY_EMAIL] == email:
+    if KEY_PROFILE_ID in _sessions[SessionId] and _sessions[SessionId][KEY_PROFILE_ID] == ProfileId:
       # found duplicate: remove
       del _sessions[SessionId]
-      print (f"Removed duplicate registered email: {email}")
+      print (f"Removed duplicate registered ProfileId: {ProfileId}")
 
-  _sessions[SessionId] = {
-    KEY_DISPLAY_NAME: DisplayName,
-    KEY_EMAIL: email,
-    KEY_DATETIME_EXPIRED: int(datetime.datetime.timestamp(datetime.datetime.now()) + 60 * 60 * 24)
-  }
+  SessionId = getNewSession()
+  NewSession = Session(
+    ProfileId = ProfileId,
+    id = SessionId,
+    DateTimeExpired = int(datetime.datetime.timestamp(datetime.datetime.now()) + 60 * 60 * 24),
+  )
+  _sessions[SessionId] = NewSession.dict()
 
   persist()
   return SessionId

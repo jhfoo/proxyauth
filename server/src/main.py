@@ -35,5 +35,5 @@ app = FastAPI()
 #   print (req.headers)
 #   return {"request_method": req.method, "path_name": path_name}
 
-app.include_router(RouteAuth.router)
+app.include_router(RouteAuth.router, prefix='/api/auth')
 app.mount('/', StaticFiles(directory='public', html=True), name='static')

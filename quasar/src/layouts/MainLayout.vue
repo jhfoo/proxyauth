@@ -15,7 +15,7 @@
           Quasar App
         </q-toolbar-title>
 
-        <q-btn @click="onLogout()" flat dense aria-label="Logout">
+        <q-btn @click="onLogout()" flat stretch aria-label="Logout">
           <q-icon name="logout"/>
           <q-tooltip>
             Log Out
@@ -58,7 +58,7 @@ const leftDrawerOpen = ref(false)
 
 async function onLogout() {
   try {
-    const resp = await axios.get('/api/logout')
+    const resp = await axios.get('/api/auth/logout')
     location.href='/login'
   } catch (err) {
     console.error(err)

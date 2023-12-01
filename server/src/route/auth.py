@@ -3,9 +3,17 @@ import datetime
 import json
 
 # community
-from typing import Union
-from typing_extensions import Annotated
-from fastapi import FastAPI, Request, APIRouter, Response, Form, status, HTTPException
+from typing import Union, Annotated
+# from typing_extensions import Annotated
+from fastapi import (
+  APIRouter, 
+  Depends,
+  Form, 
+  HTTPException, 
+  Request, 
+  Response, 
+  status
+)
 from fastapi.responses import (
   RedirectResponse
 )
@@ -14,6 +22,7 @@ from fastapi.responses import (
 import src.lib.auth as libauth
 import src.lib.SessionMgr as SessionMgr
 import src.lib.AuthorizationMgr as AuthorizationMgr
+import src.lib.ProfileMgr as ProfileMgr
 
 ADDR_HOME = 'chie.kungfoo.info'
 COOKIE_SESSION_ID = 'sid'
@@ -28,12 +37,59 @@ HomeAddr = {
 
 SessionMgr.init()
 AuthorizationMgr.init()
+ProfileMgr.init()
 
 router = APIRouter()
 
 HomeDomains = ['evan-dev.kungfoo.info', 'chie-dev.kungfoo.info']
 
-@router.get("/api/verify")
+def enforceSessionId(req: Request):
+  SessionId = req.cookies.get(COOKIE_SESSION_ID)
+  if SessionMgr.isValidSessionId(SessionId):
+    return SessionId
+  
+  # else
+  raise HTTPException(
+    status_code = status.HTTP_401_UNAUTHORIZED,
+    detail = 'Invalid or missing session'
+  )
+
+@router.post('/register')
+def registerProfile(
+  res: Response,
+  DisplayName: Annotated[str, Form()], 
+  email: Annotated[str, Form()],
+  passwd: Annotated[str, Form()],
+):
+  if len(DisplayName) < 3:
+    raise HTTPException (
+      status_code = status.HTTP_400_BAD_REQUEST,
+      detail = 'DisplayName too short'
+    )
+
+  NewProfile = ProfileMgr.Profile(
+    email = email,
+    DisplayName = DisplayName,
+    PasswordHash = ProfileMgr.createPasswordHash(email, passwd)
+  )
+
+  try:
+    ProfileId = ProfileMgr.add(NewProfile)
+    SessionId = SessionMgr.registerSession(ProfileId)
+    res.set_cookie(
+      key=COOKIE_SESSION_ID,
+      value=SessionId,
+      domain=COOKIE_DOMAIN
+    )
+    return 'ok'
+  except Exception as err:
+    raise HTTPException(
+      status_code = status.HTTP_400_BAD_REQUEST,
+      detail = str(err)
+    )
+
+
+@router.get("/verify")
 def verifyRequest(req: Request, q: Union[str, None] = None):
   global HomeAddr
 
@@ -56,45 +112,51 @@ def verifyRequest(req: Request, q: Union[str, None] = None):
   # print (req.headers)
   # return {"q": q}
 
-@router.get('/api/authorized')
-def authAuthorizedDomains(req: Request):
-  SessionId = req.cookies.get(COOKIE_SESSION_ID)
-  if not SessionId:
-    raise HTTPException(
-      status_code = status.HTTP_401_UNAUTHORIZED,
-      detail='Missing session'
-    )
-  
-  profile = SessionMgr.getProfileBySessionId(SessionId)
-  return AuthorizationMgr.getDomains(profile['email'])
+@router.get('/authorized')
+def authAuthorizedDomains(SessionId: Annotated[str, Depends(enforceSessionId)]):
+  session = SessionMgr.getSession(SessionId)
+  print (f"SessionId: {session.id}")
+  profile = ProfileMgr.getProfile(session.ProfileId)
+  return AuthorizationMgr.getDomains(profile.email)
 
-@router.get('/api/whoami')
-def authWhoAmI(req: Request, res: Response):
-  SessionId = req.cookies.get(COOKIE_SESSION_ID)
+@router.get('/session')
+def authWhoAmI(res: Response, SessionId: Annotated[str, Depends(enforceSessionId)]):
+  session = SessionMgr.getSession(SessionId)
 
-  profile = SessionMgr.getProfileBySessionId(SessionId)
-  if profile:
-    profile['sid'] = SessionId
-    return profile
+  if session:
+    # valid session
+    return session.dict()
 
-  # invalid SessionId
+  # invalid SessionId: remove it
+  res.delete_cookie(COOKIE_SESSION_ID)
+  return {}
+
+@router.get('/whoami')
+def authWhoAmI(res: Response, SessionId: Annotated[str, Depends(enforceSessionId)]):
+  session = SessionMgr.getSession(SessionId)
+  if session:
+    # valid session
+    return {
+      "profile": ProfileMgr.getProfile(session.ProfileId).dict(),
+      "session": session.dict()
+    }
+
+  # invalid SessionId: remove it
   res.delete_cookie(COOKIE_SESSION_ID)
   return {}
     
-@router.get('/api/logout')
+@router.get('/logout')
 def authLogout(req: Request, res: Response):
   SessionId = req.cookies.get(COOKIE_SESSION_ID)
   if SessionId:
     SessionMgr.deregisterSession(SessionId)
-    res.delete_cookie('sid', domain=COOKIE_DOMAIN)
+    res.delete_cookie(SessionMgr.KEY_SESSION_ID, domain=COOKIE_DOMAIN)
 
   return 'ok'
 
 
-@router.post('/api/auth')
-def authSubmit(req: Request, 
-  DisplayName: Annotated[str, Form()],
-  email: Annotated[str, Form()]):
+@router.post('/auth')
+def authSubmit(DisplayName: Annotated[str, Form()], email: Annotated[str, Form()]):
   print (f"DEBUG DisplayName: {DisplayName}")
   print (f"DEBUG email: {email}")
 

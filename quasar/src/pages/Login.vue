@@ -6,7 +6,7 @@
       <q-card class="">
         <img src="https://cdn.quasar.dev/img/mountains.jpg">
 
-        <template v-if="user">
+        <template v-if="state == STATE_KNOWN">
           <q-card-section>
             <div class="text-h6">Log In</div>
             <div v-if="ErrorMsg" class="text-subtitle2 text-pink">{{ ErrorMsg }}</div>
@@ -19,17 +19,42 @@
           </q-card-actions>
         </template>
 
-        <q-form v-else action="/api/auth" method="post" enctype="multipart/form-data">
+        <q-form v-if="state == STATE_LOGIN" ref="Loginform" action="/api/auth/auth" method="post" enctype="multipart/form-data">
           <q-card-section>
             <div class="text-h6">Log In</div>
             <div v-if="ErrorMsg" class="text-subtitle2 text-pink">{{ ErrorMsg }}</div>
 
-            <q-input name="DisplayName" v-model="LoginDisplayName" label="Display Name" />
-            <q-input name="email" v-model="LoginEmail" label="Email" />
+            <q-input ref="FirstLoginField" name="email" v-model="LoginEmail" label="Email" />
+            <q-input name="passwd" v-model="LoginPasswd" label="Password" type="password" />
+            <q-btn color="secondary" outline rounded class="full-width q-mt-md" label="Login with Google" />
+            <q-btn color="secondary" outline rounded disabled class="full-width q-mt-md" label="Login with Facebook" />
           </q-card-section>
 
-          <q-card-actions align="right">
-            <q-btn color="primary" flat icon-right="chevron_right" label="Submit" type="submit" />
+          <q-card-actions>
+            <q-btn @click="setState(STATE_REGISTER)" color="secondary" flat icon="add" label="New Account" />
+            <q-space />
+            <q-btn color="primary" flat icon="check" label="Submit" type="submit" />
+          </q-card-actions>
+        </q-form>
+
+        <q-form v-if="state == STATE_REGISTER">
+          <q-card-section>
+            <div class="text-h6">Register</div>
+            <div v-if="ErrorMsg" class="text-subtitle2 text-pink">{{ ErrorMsg }}</div>
+
+            <q-input name="DisplayName" v-model="LoginDisplayName" label="Display Name" :rules="[val => val.length > 3 || 'At least 3 characters.']" />
+            <q-input name="email" v-model="LoginEmail" label="Email" :rules="[(val,rules) => rules.email(val) || 'Invalid email format.']"/>
+            <q-input name="Passwd1" v-model="LoginPasswd1" label="Password" :rules="validatePassword1()" type="password" />
+            <q-input name="Passwd2" v-model="LoginPasswd2" label="Password (repeat)" :rules="validatePassword2()" type="password" />
+
+            <q-btn color="secondary" outline rounded class="full-width q-mt-md" label="Login with Google" />
+            <q-btn color="secondary" outline rounded disabled class="full-width q-mt-md" label="Login with Facebook" />
+          </q-card-section>
+
+          <q-card-actions>
+            <q-btn @click="setState(STATE_LOGIN)" color="secondary" flat icon="undo" label="Use Existing Account" />
+            <q-space />
+            <q-btn @click="onRegister()" color="primary" flat icon="check" label="Submit" />
           </q-card-actions>
         </q-form>
       </q-card>
@@ -50,35 +75,110 @@ body, html {
 import axios from 'axios'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { QInput } from 'quasar'
+
+const STATE_KNOWN = 'known'
+const STATE_LOGIN = 'login'
+const STATE_REGISTER = 'register'
 
 const router = useRouter()
 const LoginEmail = ref('')
 const LoginDisplayName = ref('')
+const LoginPasswd = ref('')
+const LoginPasswd1 = ref('')
+const LoginPasswd2 = ref('')
 const ErrorMsg = ref('')
-const user = ref({})
+const user = ref(await getUser())
+const state = ref(getState(user, window.location.search))
+const FirstLoginField = ref(null)
+const LoginForm = ref(null)
 
-const resp = await axios.get('/api/whoami')
-console.log(resp.data)
+parseErrorLabel(window.location.search)
 
-parseErrorLabel()
-user.value = await getUserBySession()
+function setState(NewState) {
+  switch (NewState) {
+    case STATE_REGISTER:
+      router.push('/login?state=register')
+      break
+    default:
+      router.push('/login')
+      // LoginForm.value.focus()
+      break
+  }
+
+  state.value = NewState
+}
+
+function validatePassword1() {
+  const MIN_LENGTH = 8
+  return [
+    val => val.length > 0 || 'Cannot be empty',
+    val => val.length >= MIN_LENGTH || `At least ${MIN_LENGTH} characters`,
+  ]
+}
+
+function validatePassword2() {
+  return [
+    val => val.length > 0 || 'Cannot be empty',
+    val => val === LoginPasswd1.value || 'Passwords not matching',
+  ]
+}
+
+async function onRegister() {
+  try {
+    const fd = new FormData()
+    fd.append('DisplayName', LoginDisplayName.value)
+    fd.append('email', LoginEmail.value)
+    fd.append('passwd', LoginPasswd1.value)
+    const resp = await axios.post('/api/auth/register', fd, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+  } catch (err) {
+    console.error('POST /api/auth/register failed')
+    console.error(err.response.data)
+    ErrorMsg.value = err.response.data.detail
+  }
+}
 
 async function onLogout() {
   try {
-    const resp = await axios.get('/api/logout')
+    const resp = await axios.get('/api/auth/logout')
     location.href='/login'
   } catch (err) {
     console.error(err)
   }
 }
 
-async function getUserBySession() {
-  const resp = await axios.get('/api/whoami')
-  return resp.data.sid ? resp.data : null 
+function getState(user, url) {
+  if (user.value) {
+    return STATE_KNOWN
+  }
+
+  const SearchParams = new URLSearchParams(url)
+  if (SearchParams.get('state') == 'register') {
+    return STATE_REGISTER
+  }
+
+  // else
+  return STATE_LOGIN
 }
 
-function parseErrorLabel() {
-  const SearchParams = new URLSearchParams(window.location.search)
+async function getUser() {
+  try {
+    const resp = await axios.get('/api/auth/whoami')
+    return resp.data
+  } catch (err) {
+    console.error(`ERROR /whoami: ${err.response.data}`)
+    return null
+  }
+
+}
+
+function parseErrorLabel(url) {
+  const SearchParams = new URLSearchParams(url)
   switch (SearchParams.get('e')) {
     case 'UNHANDLED-DOMAIN':
       ErrorMsg.value = `Domain ${SearchParams.get('d')} is not managed.`
@@ -93,4 +193,5 @@ function onSubmit() {
   console.log('onSubmit(): called')
   router.push('/')
 }
+
 </script>
