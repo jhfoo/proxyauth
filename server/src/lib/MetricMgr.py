@@ -51,7 +51,7 @@ def render():
   global _PublishedMetrics
 
   # is data expired?
-  if time.time() > _DateTimeNextPublish:
+  if not _DateTimeNextPublish or time.time() > _DateTimeNextPublish:
     # yes: publish empty metrics
     _registry = _render({})
   else:
