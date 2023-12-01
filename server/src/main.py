@@ -1,39 +1,42 @@
 # core
 import json
+import math
+import time
 
 # community
-from fastapi import FastAPI
+from fastapi import (
+  FastAPI,
+  Request
+)
 from fastapi.staticfiles import StaticFiles
 
 # custom
 import src.route.auth as RouteAuth
-
+import src.route.metric as RouteMetric
+import src.lib.MetricMgr as MetricMgr
 
 app = FastAPI()
 
-# @app.get("/")
-# def read_root(req: Request):
-#   return req.headers
+@app.middleware('http')
+async def trackMetrics(req: Request, call_next):
+  # measure time taken to process call
+  start = time.time()
+  res = await call_next(req)
+  now = time.time()
+  DurationSec = now - start
+  DurationMs = math.ceil(DurationSec * 10000)/10
+  res.headers['X-Process-Time-Msec'] = str(math.ceil(DurationSec * 10000)/10)
 
+  metric = MetricMgr.trackCall(
+    DurationMs = DurationMs,
+    host = req.headers.get('host'),
+    StatusCode = res.status_code,
+    now = now
+  )
+  res.headers['X-Hit-Count'] = str(metric['count'])
 
-# @app.api_route("/{path_name:path}", methods=["GET"])
-# async def catch_all(req: Request, path_name: str):
-#   print (f'STATIC: {"public" + path_name}')
-#   return FileResponse('/usr/home/app/proxyauth/server/public/index.html')
-#   RemoteIp = req.headers.get("x-real-ip")
-#   if not RemoteIp in scammers:
-#     scammers[RemoteIp] = {
-#       'count': 0,
-#       'LastHit': ''
-#     }
-
-#   scammers[RemoteIp]['count'] += 1
-#   scammers[RemoteIp]['LastTime'] = datetime.datetime.timestamp(datetime.datetime.now())
-
-#   print (f'Intrusion detected: {RemoteIp}, count = {scammers[RemoteIp]["count"]}')
-    
-#   print (req.headers)
-#   return {"request_method": req.method, "path_name": path_name}
+  return res
 
 app.include_router(RouteAuth.router, prefix='/api/auth')
+app.include_router(RouteMetric.router, prefix='/api/metric')
 app.mount('/', StaticFiles(directory='public', html=True), name='static')
