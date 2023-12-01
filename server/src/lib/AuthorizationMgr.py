@@ -12,11 +12,12 @@ def init():
   AuthorizationRegistry = json.loads(infile.read())
   infile.close()
 
-def isAuthorized(email, fqdn):
-  if email in AuthorizationRegistry and fqdn in AuthorizationRegistry[email]:
+def isAuthorized(ProfileId, fqdn):
+  # normalize to ProfileId
+  if ProfileId in AuthorizationRegistry and fqdn in AuthorizationRegistry[ProfileId]:
     return True
   
-  print (f"WARNING: Unauthorized access by {email} to {fqdn}")
+  print (f"WARNING: Unauthorized access by ProfileId {ProfileId} to {fqdn}")
   return False
 
 def getDomains(email):

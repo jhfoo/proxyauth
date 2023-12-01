@@ -61,8 +61,8 @@ def verifyLocalDomains(HomeAddr, req):
 
   # else check if cookie is valid
   print (f"Cookie: {req.cookies.get('sid')}")
-  profile = SessionMgr.getProfileBySessionId(req.cookies.get('sid'))
-  if profile and AuthorizationMgr.isAuthorized(profile['email'], req.headers.get('host')):
+  session = SessionMgr.getSession(req.cookies.get('sid'))
+  if session and AuthorizationMgr.isAuthorized(session.ProfileId, req.headers.get('host')):
     return True
 
   # record request
