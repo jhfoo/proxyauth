@@ -19,7 +19,7 @@
           </q-card-actions>
         </template>
 
-        <q-form v-if="state == STATE_LOGIN" ref="Loginform" action="/api/auth/auth" method="post" enctype="multipart/form-data">
+        <q-form v-if="state == STATE_LOGIN" ref="Loginform" action="/api/auth/login" method="post" enctype="multipart/form-data">
           <q-card-section>
             <div class="text-h6">Log In</div>
             <div v-if="ErrorMsg" class="text-subtitle2 text-pink">{{ ErrorMsg }}</div>

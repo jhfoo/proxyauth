@@ -15,6 +15,7 @@ class Profile(BaseModel):
   id: Optional[str] = None
 
 FILE_PROFILES = './data/profiles.json'
+PROFILE_KEY_EMAIL = 'email'
 
 _profiles = {}
 
@@ -49,12 +50,31 @@ def getProfile(ProfileId: str):
   
   return Profile(**_profiles[ProfileId])
 
+def getProfileByEmail(email: str):
+  global _profiles
+
+  for ProfileId in _profiles:
+    if PROFILE_KEY_EMAIL in _profiles[ProfileId] and _profiles[ProfileId][PROFILE_KEY_EMAIL] == email:
+      return getProfile(ProfileId)
+
+  return None
+
 def isEmailExist(email, profiles):
   for id in profiles:
     if email == profiles[id]['email']:
       return True
     
   return False
+
+def isPasswordMatch(email: str, password: str):
+  profile = getProfileByEmail(email)
+
+  if not profile:
+    print (f"WARNING: Failed login for {email}")
+    return False
+
+  return profile.PasswordHash == createPasswordHash(email, password)
+
 
 def add(profile: Profile):
   global _profiles

@@ -21,9 +21,10 @@ const AuthorizedHosts = ref([])
 user.value = await getUser()
 if (!user.value) {
   router.push('/login')
+} else {
+  AuthorizedHosts.value = await getAuthorizedHosts()
 }
 
-AuthorizedHosts.value = await getAuthorizedHosts()
 
 async function getAuthorizedHosts() {
   const resp = await axios.get('/api/auth/authorized')
@@ -32,13 +33,18 @@ async function getAuthorizedHosts() {
 }
 
 async function getUser() {
-  const resp = await axios.get('/api/auth/whoami')
-  console.log(resp.data)
-  if (!resp.data) {
+  try {
+    const resp = await axios.get('/api/auth/whoami')
+    console.log(resp.data)
+    if (!resp.data) {
+      return null
+    }
+
+    resp.data.session.DateTimeExpiredFormatted = dayjs.unix(resp.data.session.DateTimeExpired)
+    return resp.data
+  } catch (err) {
+    console.error((err))
     return null
   }
-
-  resp.data.session.DateTimeExpiredFormatted = dayjs.unix(resp.data.session.DateTimeExpired)
-  return resp.data
 } 
 </script>

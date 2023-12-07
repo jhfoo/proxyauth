@@ -12,7 +12,7 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          Proxy Authenticator
         </q-toolbar-title>
 
         <q-btn @click="onLogout()" flat stretch aria-label="Logout">
@@ -55,6 +55,7 @@ import { defineComponent, ref } from 'vue'
 import axios from 'axios'
 
 const leftDrawerOpen = ref(false)
+const essentialLinks = ref([])
 
 async function onLogout() {
   try {

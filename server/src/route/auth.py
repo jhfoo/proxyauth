@@ -46,7 +46,7 @@ ProfileMgr.init()
 
 router = APIRouter()
 
-HomeDomains = ['evan-dev.kungfoo.info', 'chie-dev.kungfoo.info']
+HomeDomains = ['evan-dev.kungfoo.info', 'chie-dev.kungfoo.info', 'grafana.kungfoo.info']
 
 def enforceSessionId(req: Request):
   SessionId = req.cookies.get(COOKIE_SESSION_ID)
@@ -160,12 +160,25 @@ def authLogout(req: Request, res: Response):
   return 'ok'
 
 
-@router.post('/auth')
-def authSubmit(DisplayName: Annotated[str, Form()], email: Annotated[str, Form()]):
-  print (f"DEBUG DisplayName: {DisplayName}")
-  print (f"DEBUG email: {email}")
+@router.post('/login')
+def authSubmit(passwd: Annotated[str, Form()], email: Annotated[str, Form()]):
+  # print (f"DEBUG DisplayName: {DisplayName}")
+  # print (f"DEBUG email: {email}")
 
-  SessionId = SessionMgr.registerSession(DisplayName, email)
+  profile = ProfileMgr.getProfileByEmail(email)
+  if not profile:
+    raise HTTPException (
+      status_code = status.HTTP_400_BAD_REQUEST,
+      detail = 'Unknown email'
+    )
+
+  if ProfileMgr.isPasswordMatch(email, passwd):
+    raise HTTPException (
+      status_code = status.HTTP_400_BAD_REQUEST,
+      detail = 'Bad password'
+    )
+
+  SessionId = SessionMgr.registerSession(profile.id)
 
   resp = RedirectResponse(url='/')
   resp.status_code = 302
