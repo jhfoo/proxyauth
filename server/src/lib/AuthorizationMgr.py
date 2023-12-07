@@ -23,6 +23,7 @@ def persist():
 
 def isAuthorized(ProfileId, fqdn):
   # normalize to ProfileId
+  print (f"Validating access to {fqdn}")
   if ProfileId in AuthorizationRegistry and fqdn in AuthorizationRegistry[ProfileId]:
     return True
   

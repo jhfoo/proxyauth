@@ -122,7 +122,7 @@ def authAuthorizedDomains(SessionId: Annotated[str, Depends(enforceSessionId)]):
   session = SessionMgr.getSession(SessionId)
   print (f"SessionId: {session.id}")
   profile = ProfileMgr.getProfile(session.ProfileId)
-  return AuthorizationMgr.getDomains(profile.email)
+  return AuthorizationMgr.getDomains(session.ProfileId)
 
 @router.get('/session')
 def authWhoAmI(res: Response, SessionId: Annotated[str, Depends(enforceSessionId)]):
