@@ -41,12 +41,12 @@ if not os.path.exists('./data'):
   os.mkdir('./data')
   
 SessionMgr.init()
-AuthorizationMgr.init()
+# AuthorizationMgr.init()
 ProfileMgr.init()
 
 router = APIRouter()
 
-HomeDomains = ['evan-dev.kungfoo.info', 'chie-dev.kungfoo.info', 'grafana.kungfoo.info']
+# HomeDomains = ['evan-dev.kungfoo.info', 'chie-dev.kungfoo.info', 'grafana.kungfoo.info']
 
 def enforceSessionId(req: Request):
   SessionId = req.cookies.get(COOKIE_SESSION_ID)
@@ -58,6 +58,10 @@ def enforceSessionId(req: Request):
     status_code = status.HTTP_401_UNAUTHORIZED,
     detail = 'Invalid or missing session'
   )
+
+@router.get('/test')
+def test(req: Request):
+  return req.app.AppConfig
 
 @router.post('/register')
 def registerProfile(
@@ -98,18 +102,20 @@ def registerProfile(
 def verifyRequest(req: Request, q: Union[str, None] = None):
   global HomeAddr
 
+  BaseUrl = f"https://{req.app.AppConfig['host']}"
+
   # check if accessing home domains
   TargetFqdn = req.headers.get('host')
   print (f"{req.headers.get('x-forwarded-for')} query: {TargetFqdn}")
-  if req.headers.get('host') in HomeDomains:
+  if req.headers.get('host') in AuthorizationMgr.ManagedDomains:
     # update home addr if expired
     HomeAddr = libauth.refreshHomeAddr(HomeAddr)
     if libauth.verifyLocalDomains(HomeAddr, req):
       return True
     else:
-      return RedirectResponse(url=f'https://auth-dev.kungfoo.info/login?e=UNAUTHORIZED&d={TargetFqdn}')
+      return RedirectResponse(url=f'{BaseUrl}/login?e=UNAUTHORIZED&d={TargetFqdn}')
 
-  return RedirectResponse(url=f'https://auth-dev.kungfoo.info/login?e=UNHANDLED-DOMAIN&d={TargetFqdn}')
+  return RedirectResponse(url=f'{BaseUrl}/login?e=UNHANDLED-DOMAIN&d={TargetFqdn}')
 
   # RemoteIp = req.headers.get("x-forwarded-for")
   # print (f'From {RemoteIp}')

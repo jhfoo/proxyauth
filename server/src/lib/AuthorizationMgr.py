@@ -2,19 +2,28 @@
 import json
 import os
 
+KEY_DOMAINS = 'domains'
 FILE_AUTHZ = 'data/authorization.json'
 
 AuthorizationRegistry = {}
+ManagedDomains = []
 
-def init():
+def init(AppConfig):
   global AuthorizationRegistry
+
 
   if not os.path.exists(FILE_AUTHZ):
     persist()
-    
+
+  # load persisted config    
   infile = open(FILE_AUTHZ,'r')
   AuthorizationRegistry = json.loads(infile.read())
   infile.close()
+
+  # register handled domains
+  if not KEY_DOMAINS in AppConfig:
+    raise Exception (f"Missing key in app config: {KEY_DOMAINS}")
+  ManagedDomains = AppConfig[KEY_DOMAINS]
 
 def persist():
   outfile = open(FILE_AUTHZ,'w')
