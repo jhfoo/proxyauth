@@ -10,6 +10,7 @@ ManagedDomains = []
 
 def init(AppConfig):
   global AuthorizationRegistry
+  global ManagedDomains
 
 
   if not os.path.exists(FILE_AUTHZ):

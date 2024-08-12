@@ -52,11 +52,13 @@ def refreshHomeAddr(HomeAddr):
 
   return HomeAddr
 
-def verifyLocalDomains(HomeAddr, req):
+def verifyLocalDomains(HomeAddr: dict, req, whitelist:list[str] ):
   RemoteIp = req.headers.get("x-forwarded-for")
 
   # check if accessing from home addr
-  if req.headers.get('x-forwarded-for') == HomeAddr[KEY_IP]:
+  if RemoteIp == HomeAddr[KEY_IP] \
+    or RemoteIp in whitelist:
+    print (f'RemoteIp in whitelist: {RemoteIp}')
     return True
 
   # else check if cookie is valid

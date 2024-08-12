@@ -1,0 +1,9 @@
+dev:
+  host: auth-dev.kungfoo.info
+  domains:
+    - grafana-dev.kungfoo.info
+    - prometheus-dev.kungfoo.info
+    - uptime-dev.kungfoo.info
+  whitelist:
+    - 184.22.215.192
+    - 184.22.179.191

@@ -1,0 +1,21 @@
+PYTHON=python3.9
+
+APP_PATH=$(realpath "$(dirname $0)/..")
+cd $APP_PATH
+
+if command -v freebsd-version > /dev/null; then
+  echo [DETECTED OS] FreeBSD
+  echo == Installing packages
+  PYTHON=python3.9
+  sudo pkg install -y rust
+fi
+
+echo == Remove existing venv/
+rm -rf venv
+
+echo == Creating venv/
+$PYTHON -m venv venv
+./venv/bin/$PYTHON -m pip install --upgrade pip
+
+echo == Installing dependencies
+./venv/bin/pip3 install -r conf/requirements.txt

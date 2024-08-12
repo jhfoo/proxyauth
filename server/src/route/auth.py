@@ -107,10 +107,11 @@ def verifyRequest(req: Request, q: Union[str, None] = None):
   # check if accessing home domains
   TargetFqdn = req.headers.get('host')
   print (f"{req.headers.get('x-forwarded-for')} query: {TargetFqdn}")
-  if req.headers.get('host') in AuthorizationMgr.ManagedDomains:
+  if TargetFqdn in AuthorizationMgr.ManagedDomains:
     # update home addr if expired
     HomeAddr = libauth.refreshHomeAddr(HomeAddr)
-    if libauth.verifyLocalDomains(HomeAddr, req):
+    if libauth.verifyLocalDomains(HomeAddr, req,
+      whitelist = req.app.AppConfig['whitelist']):
       return True
     else:
       return RedirectResponse(url=f'{BaseUrl}/login?e=UNAUTHORIZED&d={TargetFqdn}')
