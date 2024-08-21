@@ -1,4 +1,4 @@
-PYTHON=python3.9
+PYTHON=python3.11
 
 APP_PATH=$(realpath "$(dirname $0)/..")
 cd $APP_PATH
@@ -6,8 +6,8 @@ cd $APP_PATH
 if command -v freebsd-version > /dev/null; then
   echo [DETECTED OS] FreeBSD
   echo == Installing packages
-  PYTHON=python3.9
-  sudo pkg install -y rust
+  PYTHON=python3.11
+  sudo pkg install -y python311 rust
 fi
 
 echo == Remove existing venv/
@@ -15,6 +15,7 @@ rm -rf venv
 
 echo == Creating venv/
 $PYTHON -m venv venv
+#./venv/bin/$PYTHON -m pip install --upgrade pip --proxy http://proxpi-gigantion.node.bkk.consul:5000
 ./venv/bin/$PYTHON -m pip install --upgrade pip
 
 echo == Installing dependencies

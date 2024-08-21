@@ -7,3 +7,4 @@ dev:
   whitelist:
     - 184.22.215.192
     - 184.22.179.191
+  consul: consul.service.consul

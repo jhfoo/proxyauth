@@ -1,0 +1,2 @@
+cd quasar
+tmux new-session -d -s web "npm run dev"

@@ -52,12 +52,11 @@ def refreshHomeAddr(HomeAddr):
 
   return HomeAddr
 
-def verifyLocalDomains(HomeAddr: dict, req, whitelist:list[str] ):
+def verifyLocalDomains(HomeAddr: dict, req):
   RemoteIp = req.headers.get("x-forwarded-for")
 
   # check if accessing from home addr
-  if RemoteIp == HomeAddr[KEY_IP] \
-    or RemoteIp in whitelist:
+  if RemoteIp == HomeAddr[KEY_IP]:
     print (f'RemoteIp in whitelist: {RemoteIp}')
     return True
 

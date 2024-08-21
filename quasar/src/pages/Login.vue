@@ -19,7 +19,7 @@
           </q-card-actions>
         </template>
 
-        <q-form v-if="state == STATE_LOGIN" ref="Loginform" action="/api/auth/login" method="post" enctype="multipart/form-data">
+        <q-form v-if="state == STATE_LOGIN" ref="Loginform" :action="ApiBaseUrl + '/api/auth/login'" method="post" enctype="multipart/form-data">
           <q-card-section>
             <div class="text-h6">Log In</div>
             <div v-if="ErrorMsg" class="text-subtitle2 text-pink">{{ ErrorMsg }}</div>
@@ -27,7 +27,7 @@
             <q-input ref="FirstLoginField" name="email" v-model="LoginEmail" label="Email" />
             <q-input name="passwd" v-model="LoginPasswd" label="Password" type="password" />
             <q-btn color="secondary" outline rounded class="full-width q-mt-md" label="Login with Google" />
-            <q-btn color="secondary" outline rounded disabled class="full-width q-mt-md" label="Login with Facebook" />
+            <q-btn :href="ApiBaseUrl + '/api/auth/login/google'" color="secondary" outline rounded class="full-width q-mt-md" label="Login with GitHub" />
           </q-card-section>
 
           <q-card-actions>
@@ -48,7 +48,7 @@
             <q-input name="Passwd2" v-model="LoginPasswd2" label="Password (repeat)" :rules="validatePassword2()" type="password" />
 
             <q-btn color="secondary" outline rounded class="full-width q-mt-md" label="Login with Google" />
-            <q-btn color="secondary" outline rounded disabled class="full-width q-mt-md" label="Login with Facebook" />
+            <q-btn color="secondary" outline rounded class="full-width q-mt-md" label="Login with GitHub" />
           </q-card-section>
 
           <q-card-actions>
@@ -81,6 +81,7 @@ const STATE_KNOWN = 'known'
 const STATE_LOGIN = 'login'
 const STATE_REGISTER = 'register'
 
+const ApiBaseUrl = process.env.DEV ? 'https://auth-dev.kungfoo.info' : '' 
 const router = useRouter()
 const LoginEmail = ref('')
 const LoginDisplayName = ref('')
@@ -94,6 +95,7 @@ const FirstLoginField = ref(null)
 const LoginForm = ref(null)
 
 parseErrorLabel(window.location.search)
+
 
 function setState(NewState) {
   switch (NewState) {
@@ -130,7 +132,7 @@ async function onRegister() {
     fd.append('DisplayName', LoginDisplayName.value)
     fd.append('email', LoginEmail.value)
     fd.append('passwd', LoginPasswd1.value)
-    const resp = await axios.post('/api/auth/register', fd, {
+    const resp = await axios.post(ApiBaseUrl + '/api/auth/register', fd, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -145,7 +147,7 @@ async function onRegister() {
 
 async function onLogout() {
   try {
-    const resp = await axios.get('/api/auth/logout')
+    const resp = await axios.get(ApiBaseUrl + '/api/auth/logout')
     location.href='/login'
   } catch (err) {
     console.error(err)
@@ -153,7 +155,7 @@ async function onLogout() {
 }
 
 function getState(user, url) {
-  if (user.value) {
+  if ('profile' in user.value) {
     return STATE_KNOWN
   }
 
@@ -168,7 +170,9 @@ function getState(user, url) {
 
 async function getUser() {
   try {
-    const resp = await axios.get('/api/auth/whoami')
+    const resp = await axios.get(ApiBaseUrl + '/api/auth/whoami', {
+      timeout: 2000
+    })
     return resp.data
   } catch (err) {
     console.error(`ERROR /whoami: ${err.response.data}`)

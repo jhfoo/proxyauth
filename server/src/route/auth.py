@@ -24,6 +24,7 @@ import src.lib.auth as libauth
 import src.lib.SessionMgr as SessionMgr
 import src.lib.AuthorizationMgr as AuthorizationMgr
 import src.lib.ProfileMgr as ProfileMgr
+import src.route.authn.google as GoogleAuth
 
 ADDR_HOME = 'chie.kungfoo.info'
 COOKIE_SESSION_ID = 'sid'
@@ -36,6 +37,7 @@ HomeAddr = {
   'DateTimeLastLookup': 0,
 }
 
+
 # create data folder
 if not os.path.exists('./data'):
   os.mkdir('./data')
@@ -45,6 +47,7 @@ SessionMgr.init()
 ProfileMgr.init()
 
 router = APIRouter()
+router.include_router(GoogleAuth.router, prefix='/google')
 
 # HomeDomains = ['evan-dev.kungfoo.info', 'chie-dev.kungfoo.info', 'grafana.kungfoo.info']
 
@@ -106,12 +109,15 @@ def verifyRequest(req: Request, q: Union[str, None] = None):
 
   # check if accessing home domains
   TargetFqdn = req.headers.get('host')
+  RemoteIp = req.headers.get("x-forwarded-for")
+  if RemoteIp in req.app.AppConfig['whitelist']:
+    return True 
+
   print (f"{req.headers.get('x-forwarded-for')} query: {TargetFqdn}")
   if TargetFqdn in AuthorizationMgr.ManagedDomains:
     # update home addr if expired
     HomeAddr = libauth.refreshHomeAddr(HomeAddr)
-    if libauth.verifyLocalDomains(HomeAddr, req,
-      whitelist = req.app.AppConfig['whitelist']):
+    if libauth.verifyLocalDomains(HomeAddr, req):
       return True
     else:
       return RedirectResponse(url=f'{BaseUrl}/login?e=UNAUTHORIZED&d={TargetFqdn}')
@@ -144,7 +150,8 @@ def authWhoAmI(res: Response, SessionId: Annotated[str, Depends(enforceSessionId
   return {}
 
 @router.get('/whoami')
-def authWhoAmI(res: Response, SessionId: Annotated[str, Depends(enforceSessionId)]):
+def authWhoAmI(req: Request, res: Response):
+  SessionId = req.cookies.get(COOKIE_SESSION_ID)
   session = SessionMgr.getSession(SessionId)
   if session:
     # valid session

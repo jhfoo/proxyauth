@@ -1,0 +1,5 @@
+rm -rf ../server/public-backup
+mv ../server/public ../server/public-backup
+mkdir -p ../server/public
+cp -R ./dist/spa/* ../server/public
+

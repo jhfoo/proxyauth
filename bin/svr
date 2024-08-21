@@ -1,0 +1,2 @@
+cd server
+tmux new-session -d -s svr "./bin/dev"

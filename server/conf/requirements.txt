@@ -1,6 +1,11 @@
 fastapi
+fastapi-sessions
 uvicorn[standard]
 python-multipart
 prometheus-client
 requests
 pyyaml
+httpx-oauth
+chompjs
+google-auth
+python-consul

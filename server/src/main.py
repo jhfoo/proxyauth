@@ -12,6 +12,7 @@ from fastapi import (
   Request
 )
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 import yaml
 
@@ -62,6 +63,16 @@ async def lifespan(app: FastAPI):
   yield
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=[
+    '*'
+  ],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
+
 
 
 @app.middleware('http')
@@ -85,6 +96,6 @@ async def trackMetrics(req: Request, call_next):
 
   return res
 
+# app.mount('/', StaticFiles(directory='public', html=True), name='static')
 app.include_router(RouteAuth.router, prefix='/api/auth')
 app.include_router(RouteMetric.router, prefix='/api/metric')
-app.mount('/', StaticFiles(directory='public', html=True), name='static')
