@@ -10,7 +10,6 @@ KEY_DOMAINS = 'domains'
 FILE_AUTHZ = 'data/authorization.json'
 
 AuthorizationRegistry = {}
-ManagedDomains = []
 
 def init(AppConfig):
   global AuthorizationRegistry
@@ -25,9 +24,10 @@ def init(AppConfig):
   AuthorizationRegistry = json.loads(infile.read())
   infile.close()
 
+def getManagedDomains():
   # register handled domains
-  ManagedDomains = ConfigMgr.getDomains()
-
+  return ConfigMgr.getDomains()
+  
 def persist():
   outfile = open(FILE_AUTHZ,'w')
   outfile.write(json.dumps(AuthorizationRegistry, indent=2))

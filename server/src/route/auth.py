@@ -133,7 +133,7 @@ def verifyRequest(req: Request, q: Union[str, None] = None):
     return True 
 
   print (f"{req.headers.get('x-forwarded-for')} query: {TargetFqdn}")
-  if TargetFqdn in AuthorizationMgr.ManagedDomains:
+  if TargetFqdn in AuthorizationMgr.getManagedDomains():
     # update home addr if expired
     HomeAddr = libauth.refreshHomeAddr(HomeAddr)
     if libauth.verifyLocalDomains(HomeAddr, req):

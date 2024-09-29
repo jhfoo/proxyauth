@@ -1,3 +1,6 @@
+PWD=`dirname $0`
+cd "$PWD/.."
+
 export UVICORN_PORT=5000
 export UVICORN_HOST=0.0.0.0
 export PROXYAUTH_CONSUL=consul-teller.node.consul
