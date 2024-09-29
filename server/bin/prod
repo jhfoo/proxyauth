@@ -3,6 +3,6 @@ cd "$PWD/.."
 
 export UVICORN_PORT=5000
 export UVICORN_HOST=0.0.0.0
-export PROXYAUTH_CONSUL=consul-teller.node.consul
+export PROXYAUTH_CONSUL=consul.service.consul
 export PROXYAUTH_MODE=prod
 ./venv/bin/uvicorn src.main:app --reload-dir src --reload
