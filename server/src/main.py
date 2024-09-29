@@ -2,8 +2,8 @@
 import base64
 import json
 import math
+import sys
 import time
-import os
 
 # community
 from contextlib import asynccontextmanager
@@ -21,44 +21,34 @@ import src.route.auth as RouteAuth
 import src.route.metric as RouteMetric
 import src.lib.MetricMgr as MetricMgr
 import src.lib.AuthorizationMgr as AuthorizationMgr
+import src.lib.ConfigMgr as ConfigMgr
+import src.lib.exceptions as exceptions
 
-FILE_APP_CONFIG = 'conf/proxyauth.yaml'
-PROXYAUTH_MODE = 'PROXYAUTH_MODE'
-MODE_DEV = 'dev'
-MODE_PROD = 'prod'
 
 def initModules(AppConfig):
   AuthorizationMgr.init(AppConfig)
-  for domain in AuthorizationMgr.ManagedDomains:
+  for domain in ConfigMgr.getDomains():
     print (f'Manage domain: {domain}')
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  if PROXYAUTH_MODE in os.environ:
-    ConfigMode = os.environ[PROXYAUTH_MODE]
-    print (f"Config mode: {ConfigMode}")
-  else:
-    print(f"Defaulting mode to {MODE_DEV}")
-    ConfigMode = MODE_DEV
+  try:
+    AppConfig = ConfigMgr.getConfig()
 
-  with open(FILE_APP_CONFIG,'r') as infile:
-    MasterAppConfig = yaml.safe_load(infile)
-
-    if not ConfigMode in MasterAppConfig:
-      raise Exception(f'Missing app mode: {ConfigMode}')
-
-    AppConfig = MasterAppConfig[ConfigMode]
-
-  # req = requests.get(f"http://consul-teller.node.consul:8500/v1/kv/proxyauth/{ConfigMode}")
-  # print (f"text:{req.text}")
-  # if not req.text:
-  #   print(f"[ERROR] Missing Consul config")
-  #   exit(1)
-  # print(f'kv: {json.dumps(req.json(), indent=2)}')
-  # AppConfig = json.loads(base64.b64decode(req.json()[0]['Value']).decode('utf-8'))
+    # req = requests.get(f"http://consul-teller.node.consul:8500/v1/kv/proxyauth/{ConfigMode}")
+    # print (f"text:{req.text}")
+    # if not req.text:
+    #   print(f"[ERROR] Missing Consul config")
+    #   exit(1)
+    # print(f'kv: {json.dumps(req.json(), indent=2)}')
+    # AppConfig = json.loads(base64.b64decode(req.json()[0]['Value']).decode('utf-8'))
     app.AppConfig = AppConfig
     print (f"value: {json.dumps(AppConfig, indent=2)}")
     initModules(AppConfig)
+  except exceptions.PlannedException as err:
+    print (f'ERROR: {err}')
+    raise SystemExit(1)
 
   yield
 

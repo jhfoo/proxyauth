@@ -1,0 +1,2 @@
+class PlannedException (Exception):
+  pass

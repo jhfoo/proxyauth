@@ -2,6 +2,7 @@
 import datetime
 import json
 import os
+import socket
 
 # community
 from typing import Union, Annotated
@@ -30,6 +31,7 @@ ADDR_HOME = 'chie.kungfoo.info'
 COOKIE_SESSION_ID = 'sid'
 COOKIE_DOMAIN = 'kungfoo.info'
 KEY_DATETIME_EXPIRED = 'DateTimeExpired'
+KEY_WHITELIST = 'whitelist'
 
 HomeAddr = {
   'fqdn': ADDR_HOME,
@@ -37,6 +39,8 @@ HomeAddr = {
   'DateTimeLastLookup': 0,
 }
 
+WhitelistCache = None
+WhitelistExpires = None
 
 # create data folder
 if not os.path.exists('./data'):
@@ -50,6 +54,21 @@ router = APIRouter()
 router.include_router(GoogleAuth.router, prefix='/google')
 
 # HomeDomains = ['evan-dev.kungfoo.info', 'chie-dev.kungfoo.info', 'grafana.kungfoo.info']
+
+def translateFqdn(whitelist):
+  TranslatedList = []
+
+  for fqdn in whitelist:
+    ip = socket.gethostbyname(fqdn)
+    TranslatedList.append(ip)
+    print (f'fqdn: {fqdn} = {ip}')
+  return TranslatedList
+
+def getCachedWhitelist(whitelist):
+  if WhitelistExpires == None:
+    WhitelistCache = translateFqdn(whitelist)
+  
+  return WhitelistCache
 
 def enforceSessionId(req: Request):
   SessionId = req.cookies.get(COOKIE_SESSION_ID)
@@ -110,7 +129,7 @@ def verifyRequest(req: Request, q: Union[str, None] = None):
   # check if accessing home domains
   TargetFqdn = req.headers.get('host')
   RemoteIp = req.headers.get("x-forwarded-for")
-  if RemoteIp in req.app.AppConfig['whitelist']:
+  if RemoteIp in getCachedWhitelist(req.app.AppConfig['whitelist']):
     return True 
 
   print (f"{req.headers.get('x-forwarded-for')} query: {TargetFqdn}")

@@ -9,3 +9,4 @@ httpx-oauth
 chompjs
 google-auth
 python-consul
+py-consul

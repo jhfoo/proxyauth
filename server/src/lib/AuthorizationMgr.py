@@ -2,6 +2,10 @@
 import json
 import os
 
+# custom
+import src.lib.ConfigMgr as ConfigMgr
+import src.lib.exceptions as exceptions
+
 KEY_DOMAINS = 'domains'
 FILE_AUTHZ = 'data/authorization.json'
 
@@ -22,9 +26,7 @@ def init(AppConfig):
   infile.close()
 
   # register handled domains
-  if not KEY_DOMAINS in AppConfig:
-    raise Exception (f"Missing key in app config: {KEY_DOMAINS}")
-  ManagedDomains = AppConfig[KEY_DOMAINS]
+  ManagedDomains = ConfigMgr.getDomains()
 
 def persist():
   outfile = open(FILE_AUTHZ,'w')
