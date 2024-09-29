@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 import socket
+import time
 
 # community
 from typing import Union, Annotated
@@ -32,6 +33,7 @@ COOKIE_SESSION_ID = 'sid'
 COOKIE_DOMAIN = 'kungfoo.info'
 KEY_DATETIME_EXPIRED = 'DateTimeExpired'
 KEY_WHITELIST = 'whitelist'
+WHITELIST_EXPIRES_SEC = 5 * 60
 
 HomeAddr = {
   'fqdn': ADDR_HOME,
@@ -59,14 +61,21 @@ def translateFqdn(whitelist):
   TranslatedList = []
 
   for fqdn in whitelist:
-    ip = socket.gethostbyname(fqdn)
-    TranslatedList.append(ip)
-    print (f'fqdn: {fqdn} = {ip}')
+    try:
+      ip = socket.gethostbyname(fqdn)
+      TranslatedList.append(ip)
+      print (f'fqdn: {fqdn} = {ip}')
+    except Exception as err:
+      print (f'Ignoring whitelist domain: {fqdn}')
   return TranslatedList
 
 def getCachedWhitelist(whitelist):
+  global WhitelistCache
+  global WhitelistExpires
+
   if WhitelistExpires == None:
     WhitelistCache = translateFqdn(whitelist)
+    WhitelistExpires = time.time() + WHITELIST_EXPIRES_SEC
   
   return WhitelistCache
 
