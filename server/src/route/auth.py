@@ -73,7 +73,8 @@ def getCachedWhitelist(whitelist):
   global WhitelistCache
   global WhitelistExpires
 
-  if WhitelistExpires == None:
+  if WhitelistExpires == None \
+    or WhitelistExpires < time.time():
     WhitelistCache = translateFqdn(whitelist)
     WhitelistExpires = time.time() + WHITELIST_EXPIRES_SEC
   
