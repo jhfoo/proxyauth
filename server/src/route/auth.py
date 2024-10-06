@@ -212,9 +212,13 @@ def getToken(req: Request, res: Response):
   SessionId = req.cookies.get(COOKIE_SESSION_ID)
   if SessionId == None:
     SessionId = SessionMgr.registerSession()
-    return 'New session'
-  
-  return 'ok'
+
+  res.set_cookie(
+    key=COOKIE_SESSION_ID,
+    value=SessionId,
+    domain=COOKIE_DOMAIN
+  )  
+  return f'SessionId: {SessionId}'
 
 @router.get('/whitelist')
 def getToken(req: Request, res: Response):
@@ -222,4 +226,30 @@ def getToken(req: Request, res: Response):
     'raw': AuthorizationMgr.RawWhitelist,
     'translated': AuthorizationMgr.getWhitelist(),
     'expires': AuthorizationMgr.WhitelistExpires
+  }
+
+@router.get('/enable/{fqdn}/{SessionId}')
+def enableFqdnBySessionId(fqdn, SessionId, req: Request, res: Response):
+  session = SessionMgr.getSession(SessionId)
+  if session is None:
+    return f'Unknown session'
+  # if not ('ProfileId' in session):
+  #   return f'Unknown ProfileId: {session['ProfileId']}'
+  
+  AuthorizationMgr.authorize(session.ProfileId, fqdn)
+
+  return f'fqdn: {fqdn}, SessionId: {SessionId}, session: {session}'
+
+@router.get('/test/{fqdn}/{SessionId}')
+def testFqdnBySessionId(fqdn, SessionId, req: Request, res: Response):
+  session = SessionMgr.getSession(SessionId)
+  if session is None:
+    return f'Unknown session'
+  # if not ('ProfileId' in session):
+  #   return f'Unknown ProfileId: {session['ProfileId']}'
+  isAuthorized = AuthorizationMgr.isAuthorized(session.ProfileId, fqdn)
+
+  return {
+    'SessionId': SessionId,
+    'isAuthorized': isAuthorized
   }

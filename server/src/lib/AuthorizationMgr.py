@@ -68,11 +68,28 @@ def persist():
 def isAuthorized(ProfileId, fqdn):
   # normalize to ProfileId
   print (f"Validating access to {fqdn}")
-  if ProfileId in AuthorizationRegistry and fqdn in AuthorizationRegistry[ProfileId]:
+  if ProfileId in AuthorizationRegistry \
+    and fqdn in AuthorizationRegistry[ProfileId]:
     return True
   
   print (f"WARNING: Unauthorized access by ProfileId {ProfileId} to {fqdn}")
   return False
+
+def authorize(ProfileId, fqdn):
+  global AuthorizationRegistry
+
+  if ProfileId in AuthorizationRegistry:
+    # ProfileId exists
+    # check if fqdn already authorized
+    if not (fqdn in AuthorizationRegistry[ProfileId]):
+      # no: add to auth list
+      AuthorizationRegistry[ProfileId].append(fqdn)  
+  else:
+    # create new entry in dict
+    AuthorizationRegistry[ProfileId] = [fqdn]
+
+  persist()
+  
 
 def getDomains(email):
   global AuthorizationRegistry

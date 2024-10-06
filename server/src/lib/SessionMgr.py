@@ -2,7 +2,9 @@
 import json
 import random
 import datetime
+import hashlib
 import os
+import time
 from typing import Union
 
 # community
@@ -103,10 +105,12 @@ def deregisterSession(SessionId):
   del _sessions[SessionId]
   persist()
 
+
+
 def registerSession(ProfileId = None):
   if ProfileId == None:
     # because Session.ProfileId expects a string
-    ProfileId = ''
+    ProfileId = 'ANON:' + hashlib.md5(str(time.time()).encode('utf-8')).hexdigest()
   else:
     # remove existing session with duplicate email
     for SessionId in list(_sessions.keys()).copy():
