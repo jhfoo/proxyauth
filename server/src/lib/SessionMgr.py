@@ -103,13 +103,18 @@ def deregisterSession(SessionId):
   del _sessions[SessionId]
   persist()
 
-def registerSession(ProfileId):
-  # remove existing session with duplicate email
-  for SessionId in list(_sessions.keys()).copy():
-    if KEY_PROFILE_ID in _sessions[SessionId] and _sessions[SessionId][KEY_PROFILE_ID] == ProfileId:
-      # found duplicate: remove
-      del _sessions[SessionId]
-      print (f"Removed duplicate registered ProfileId: {ProfileId}")
+def registerSession(ProfileId = None):
+  if ProfileId == None:
+    # because Session.ProfileId expects a string
+    ProfileId = ''
+  else:
+    # remove existing session with duplicate email
+    for SessionId in list(_sessions.keys()).copy():
+      if KEY_PROFILE_ID in _sessions[SessionId] and _sessions[SessionId][KEY_PROFILE_ID] == ProfileId:
+        # found duplicate: remove
+        del _sessions[SessionId]
+        print (f"Removed duplicate registered ProfileId: {ProfileId}")
+
 
   SessionId = getNewSession()
   NewSession = Session(

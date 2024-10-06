@@ -6,7 +6,7 @@ cd $APP_PATH
 if command -v freebsd-version > /dev/null; then
   echo [DETECTED OS] FreeBSD
   echo == Installing packages
-  PYTHON=python3.11
+  # PYTHON=python3.11
   sudo pkg install -y python311 rust
 fi
 
