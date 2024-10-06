@@ -18,6 +18,7 @@ from fastapi import (
 from fastapi.responses import (
   RedirectResponse
 )
+from fastapi.responses import JSONResponse
 
 # custom
 import src.lib.auth as libauth
@@ -25,6 +26,7 @@ import src.lib.SessionMgr as SessionMgr
 import src.lib.AuthorizationMgr as AuthorizationMgr
 import src.lib.ProfileMgr as ProfileMgr
 import src.route.authn.google as GoogleAuth
+import src.lib.exceptions as exceptions
 
 ADDR_HOME = 'chie.kungfoo.info'
 COOKIE_SESSION_ID = 'sid'
@@ -158,8 +160,10 @@ def authWhoAmI(req: Request, res: Response):
   if session:
     # valid session
     return {
-      "profile": ProfileMgr.getProfile(session.ProfileId).dict(),
-      "session": session.dict()
+      # "profile": ProfileMgr.getProfile(session.ProfileId).dict(),
+      'SessionId': SessionId,
+      'ProfileId': session.ProfileId,
+      'AuthorizedFqdns': AuthorizationMgr.getAuthorizedFqdn(session.ProfileId)
     }
 
   # invalid SessionId: remove it
@@ -228,17 +232,17 @@ def getToken(req: Request, res: Response):
     'expires': AuthorizationMgr.WhitelistExpires
   }
 
-@router.get('/enable/{fqdn}/{SessionId}')
-def enableFqdnBySessionId(fqdn, SessionId, req: Request, res: Response):
-  session = SessionMgr.getSession(SessionId)
-  if session is None:
-    return f'Unknown session'
+@router.get('/session/{SessionId}/{ProfileId}')
+def enableFqdnBySessionId(SessionId, ProfileId, req: Request, res: Response):
   # if not ('ProfileId' in session):
   #   return f'Unknown ProfileId: {session['ProfileId']}'
-  
-  AuthorizationMgr.authorize(session.ProfileId, fqdn)
 
-  return f'fqdn: {fqdn}, SessionId: {SessionId}, session: {session}'
+  if not AuthorizationMgr.isValidProfileId(ProfileId):
+    raise exceptions.PlannedException(f'Invalid ProfileId: {ProfileId}')  
+  SessionMgr.assignProfileId(SessionId, ProfileId)
+  session = SessionMgr.getSession(SessionId)
+
+  return f'session: {session}'
 
 @router.get('/test/{fqdn}/{SessionId}')
 def testFqdnBySessionId(fqdn, SessionId, req: Request, res: Response):

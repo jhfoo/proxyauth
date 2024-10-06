@@ -10,12 +10,16 @@ from typing import Union
 # community
 from pydantic import BaseModel
 
+# custom
+import src.lib.exceptions as exceptions
+
 STORE_COOKIES = 'data/cookies.json'
 KEY_DATETIME_EXPIRED = 'DateTimeExpired'
 KEY_DISPLAY_NAME = 'DisplayName'
 KEY_EMAIL = 'email'
 KEY_SESSION_ID = 'sid'
 KEY_PROFILE_ID = 'ProfileId'
+
 
 _sessions = {}
 
@@ -105,7 +109,12 @@ def deregisterSession(SessionId):
   del _sessions[SessionId]
   persist()
 
-
+def assignProfileId(SessionId, ProfileId):
+  if not (SessionId in _sessions):
+    raise exceptions.PlannedException(f'Invalid SessionId: {SessionId}')
+  
+  _sessions[SessionId]['ProfileId'] = ProfileId
+  persist()
 
 def registerSession(ProfileId = None):
   if ProfileId == None:

@@ -65,11 +65,17 @@ def persist():
   outfile.write(json.dumps(AuthorizationRegistry, indent=2))
   outfile.close()
 
+def getAuthorizedFqdn(ProfileId):
+  if not (ProfileId in AuthorizationRegistry):
+    raise exceptions.PlannedException(f'Invalid ProfileId: {ProfileId}')
+  
+  return AuthorizationRegistry[ProfileId]
+
 def isAuthorized(ProfileId, fqdn):
   # normalize to ProfileId
   print (f"Validating access to {fqdn}")
   if ProfileId in AuthorizationRegistry \
-    and fqdn in AuthorizationRegistry[ProfileId]:
+    and fqdn in getAuthorizedFqdn(ProfileId):
     return True
   
   print (f"WARNING: Unauthorized access by ProfileId {ProfileId} to {fqdn}")
@@ -99,3 +105,6 @@ def getDomains(email):
   
   # else
   return []
+
+def isValidProfileId(ProfileId):
+  return ProfileId in AuthorizationRegistry

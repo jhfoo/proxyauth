@@ -9,10 +9,13 @@ import time
 from contextlib import asynccontextmanager
 from fastapi import (
   FastAPI,
-  Request
+  Request,
+  status,
+  HTTPException
 )
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import requests
 import yaml
 
@@ -23,7 +26,6 @@ import src.lib.MetricMgr as MetricMgr
 import src.lib.AuthorizationMgr as AuthorizationMgr
 import src.lib.ConfigMgr as ConfigMgr
 import src.lib.exceptions as exceptions
-
 
 def initModules(AppConfig):
   AuthorizationMgr.init(AppConfig)
@@ -63,8 +65,6 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-
-
 @app.middleware('http')
 async def trackMetrics(req: Request, call_next):
   # print (f"DEBUG x-forwarded-for: {req.headers}")
@@ -85,6 +85,15 @@ async def trackMetrics(req: Request, call_next):
   res.headers['X-Hit-Count'] = str(metric['count'])
 
   return res
+
+def PlannedExceptionHandler(request: Request, exc: HTTPException):
+  print (exc)
+  return JSONResponse(
+    status_code=status.HTTP_404_NOT_FOUND, 
+    content={'detail': str(exc)}
+  )
+
+app.add_exception_handler(exceptions.PlannedException, PlannedExceptionHandler)
 
 # app.mount('/', StaticFiles(directory='public', html=True), name='static')
 app.include_router(RouteAuth.router, prefix='/api/auth')
