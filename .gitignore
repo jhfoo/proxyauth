@@ -1,7 +1,7 @@
 conf/app.json
 server/src/__pycache__/
 server/venv/
-*/__pycache__/
+**/__pycache__/
 server/data/cookies.json
 server/data/authorization.json
 server/data/profiles.json
