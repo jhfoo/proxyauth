@@ -1,0 +1,8 @@
+echo "Env PROXYAUTH_MODE: $PROXYAUTH_MODE"
+if [ "$PROXYAUTH_MODE" = "prod" ]; then
+  echo "Starting in production mode"
+  bin/prod
+else
+  echo "Starting in development mode"
+  bin/dev
+fi
